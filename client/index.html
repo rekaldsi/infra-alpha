@@ -24,7 +24,7 @@ textarea{resize:vertical;min-height:70px}
 ::-webkit-scrollbar-track{background:var(--bg1)}
 ::-webkit-scrollbar-thumb{background:var(--border2);border-radius:3px}
 .app{display:flex;flex-direction:column;min-height:100vh}
-.header{border-bottom:1px solid var(--border);padding:12px 20px;display:flex;align-items:center;justify-content:space-between;background:var(--bg1);position:sticky;top:0;z-index:100;position:relative}
+.header{border-bottom:1px solid var(--border);padding:12px 20px;display:flex;align-items:center;justify-content:space-between;background:var(--bg1);position:sticky;top:0;z-index:100}
 .header::after{content:'';position:absolute;bottom:0;left:0;right:0;height:2px;background:linear-gradient(90deg,var(--accent),var(--green),var(--amber))}
 .logo{font-family:var(--mono);font-size:15px;font-weight:700;letter-spacing:0.08em;color:#fff}
 .logo span{color:var(--accent)}
@@ -112,6 +112,7 @@ textarea{resize:vertical;min-height:70px}
 .context-hint{font-size:11px;color:var(--text3);margin-top:5px;font-style:italic}
 .tier-badge{font-family:var(--mono);font-size:9px;padding:1px 6px;border-radius:2px;background:rgba(255,255,255,0.05);color:var(--text3);border:1px solid var(--border);text-transform:uppercase;letter-spacing:0.08em}
 .tier-badge.t1{background:rgba(0,200,160,0.08);color:var(--green);border-color:rgba(0,200,160,0.2)}
+tr[style*="cursor"]:hover td{background:rgba(255,255,255,0.02)}
 table{width:100%;border-collapse:collapse;font-size:12px}
 th{text-align:left;padding:6px 10px;font-family:var(--mono);font-size:10px;text-transform:uppercase;letter-spacing:0.08em;color:var(--text3);border-bottom:1px solid var(--border);background:var(--bg2)}
 td{padding:8px 10px;border-bottom:1px solid var(--border);vertical-align:middle}
@@ -194,6 +195,21 @@ const BRAND_MAP = {
   'enersys':['ENS'],'hawker':['ENS'],
 };
 
+// ── COMPANY INFO (for detail modals) ────────────────────────────────────────
+const COMPANY_INFO = {
+  VRT:  { shortName:'Vertiv Holdings',   desc:'Power and thermal management systems for data centers — UPS, liquid cooling, and precision cooling for AI infrastructure.' },
+  ETN:  { shortName:'Eaton Corporation', desc:'Power management and electrical systems — breakers, UPS, and switchgear that Frank physically swaps in live data centers.' },
+  SBGSY:{ shortName:'Schneider Electric',desc:'Energy management and automation (APC brand) — EcoStruxure platform, PDUs, DCIM software with deep vendor lock-in.' },
+  ABB:  { shortName:'ABB Ltd',           desc:'Electrification and industrial automation — modular switchgear, UPS, and AI-ready medium-voltage breaker systems.' },
+  CMI:  { shortName:'Cummins Inc',       desc:'Diesel and natural gas generators for backup power — mission-critical runtime for Tier 3/4 data center facilities.' },
+  NVT:  { shortName:'nVent Electric',    desc:'Electrical enclosures and thermal management — liquid cooling systems and cable management solving AI rack density challenges.' },
+  ROK:  { shortName:'Rockwell Automation',desc:'Industrial automation and PLCs — Allen-Bradley control systems that dominate the data center controls layer.' },
+  CAT:  { shortName:'Caterpillar Inc',   desc:'Heavy equipment and backup power generators — large-scale generator systems for hyperscale and enterprise data centers.' },
+  ENS:  { shortName:'EnerSys',           desc:'Industrial batteries and stored energy systems — dominant in VRLA and lithium DC backup power for UPS runtime.' },
+  HUBB: { shortName:'Hubbell Inc',       desc:'Electrical products and wiring devices — in every data center build-out as the wiring and distribution backbone.' },
+  AMETEK:{ shortName:'AMETEK Inc',       desc:'Electronic instruments and electromechanical devices — power quality monitoring and precision power for DC environments.' },
+};
+
 function resolveMfr(raw) {
   const lo = raw.toLowerCase().replace(/[^a-z0-9\s-]/g,'');
   for(const [brand,tickers] of Object.entries(BRAND_MAP)){
@@ -215,6 +231,115 @@ function scoreColor(s){
   return '#8b90a0';
 }
 
+// ── COMPANY DETAIL MODAL ────────────────────────────────────────────────────
+function CompanyModal({company, prices, onClose, onViewIntelligence}){
+  if(!company) return null;
+  const p = prices[company.ticker];
+  const sig = getSignal(company.score);
+  const info = COMPANY_INFO[company.ticker] || {};
+  const hi52 = p?.fiftyTwoWeekHigh || p?.high52 || null;
+  const lo52 = p?.fiftyTwoWeekLow  || p?.low52  || null;
+
+  function handleBackdrop(e){ if(e.target===e.currentTarget) onClose(); }
+
+  return React.createElement('div', {
+    onClick: handleBackdrop,
+    style:{
+      position:'fixed',inset:0,background:'rgba(0,0,0,0.72)',
+      display:'flex',alignItems:'center',justifyContent:'center',
+      zIndex:200,padding:'16px'
+    }
+  },
+    React.createElement('div', {
+      style:{
+        background:'var(--bg1)',border:'1px solid var(--border2)',
+        borderRadius:8,width:'100%',maxWidth:440,
+        padding:'20px',position:'relative',
+        boxShadow:'0 24px 64px rgba(0,0,0,0.6)'
+      }
+    },
+      // Close button
+      React.createElement('button', {
+        onClick: onClose,
+        style:{
+          position:'absolute',top:12,right:12,
+          background:'none',border:'none',color:'var(--text3)',
+          fontSize:20,cursor:'pointer',lineHeight:1,padding:'2px 6px',
+          borderRadius:3,transition:'color 0.1s'
+        }
+      }, '✕'),
+
+      // Header
+      React.createElement('div', {style:{marginBottom:14}},
+        React.createElement('div', {style:{display:'flex',gap:8,alignItems:'center',marginBottom:6}},
+          React.createElement('span', {className:'company-card ticker',style:{fontSize:12,padding:'3px 10px'}}, company.ticker),
+          React.createElement('span', {
+            style:{fontFamily:'var(--mono)',fontSize:10,padding:'2px 8px',borderRadius:2,
+              background:sig.color+'18',color:sig.color,border:'1px solid '+sig.color+'44'}
+          }, sig.label)
+        ),
+        React.createElement('div', {style:{fontWeight:700,fontSize:18,color:'#fff',marginBottom:2}},
+          info.shortName || company.name
+        ),
+        React.createElement('div', {style:{fontFamily:'var(--mono)',fontSize:10,color:'var(--text3)',textTransform:'uppercase',letterSpacing:'0.08em'}},
+          company.cat
+        )
+      ),
+
+      // Price row
+      p && React.createElement('div', {
+        style:{
+          background:'var(--bg2)',border:'1px solid var(--border)',
+          borderRadius:5,padding:'12px',marginBottom:14,
+          display:'grid',gridTemplateColumns:'1fr 1fr',gap:8
+        }
+      },
+        React.createElement('div', null,
+          React.createElement('div', {style:{fontFamily:'var(--mono)',fontSize:10,color:'var(--text3)',marginBottom:4,textTransform:'uppercase'}}, 'Price'),
+          React.createElement('div', {style:{fontFamily:'var(--mono)',fontSize:20,fontWeight:700,color:'#fff'}}, '$'+p.price?.toFixed(2)),
+          React.createElement('div', {style:{fontFamily:'var(--mono)',fontSize:12,color:p.changePct>=0?'var(--green)':'var(--coral)'}},
+            (p.changePct>=0?'+':'')+p.changePct?.toFixed(2)+'%'
+          )
+        ),
+        React.createElement('div', null,
+          React.createElement('div', {style:{fontFamily:'var(--mono)',fontSize:10,color:'var(--text3)',marginBottom:4,textTransform:'uppercase'}}, 'IA Score'),
+          React.createElement('div', {style:{fontFamily:'var(--mono)',fontSize:20,fontWeight:700,color:scoreColor(company.score)}}, company.score),
+          React.createElement('div', {style:{fontFamily:'var(--mono)',fontSize:10,color:'var(--text3)'}}, '/100')
+        )
+      ),
+
+      // 52-week high/low if available
+      (hi52 || lo52) && React.createElement('div', {
+        style:{
+          display:'flex',gap:8,marginBottom:14,
+          fontFamily:'var(--mono)',fontSize:12
+        }
+      },
+        hi52 && React.createElement('div', {style:{flex:1,background:'rgba(0,200,160,0.06)',border:'1px solid rgba(0,200,160,0.2)',borderRadius:4,padding:'8px 10px'}},
+          React.createElement('div', {style:{fontSize:9,color:'var(--text3)',textTransform:'uppercase',marginBottom:3}}, '52W High'),
+          React.createElement('div', {style:{color:'var(--green)',fontWeight:700}}, '$'+parseFloat(hi52).toFixed(2))
+        ),
+        lo52 && React.createElement('div', {style:{flex:1,background:'rgba(240,80,80,0.06)',border:'1px solid rgba(240,80,80,0.2)',borderRadius:4,padding:'8px 10px'}},
+          React.createElement('div', {style:{fontSize:9,color:'var(--text3)',textTransform:'uppercase',marginBottom:3}}, '52W Low'),
+          React.createElement('div', {style:{color:'var(--coral)',fontWeight:700}}, '$'+parseFloat(lo52).toFixed(2))
+        )
+      ),
+
+      // Description
+      React.createElement('div', {style:{fontSize:13,color:'var(--text2)',lineHeight:1.65,marginBottom:16}},
+        info.desc || company.desc
+      ),
+
+      // View Intelligence button
+      React.createElement('button', {
+        className:'btn btn-primary',
+        style:{width:'100%',justifyContent:'center',padding:'10px'},
+        onClick: ()=> onViewIntelligence(company)
+      }, 'View Intelligence →')
+    )
+  );
+}
+
 // ── ROOT APP ─────────────────────────────────────────────────────────────────
 function InfraAlpha(){
   const [tab, setTab] = useState('dash');
@@ -229,6 +354,7 @@ function InfraAlpha(){
   const [obsForm, setObsForm] = useState({mfr:'',model:'',cat:'power',sub:'ups',ctx:'replacing',crit:3,age:'',notes:''});
   const [chatInput, setChatInput] = useState('');
   const [chatLoading, setChatLoading] = useState(false);
+  const [selectedCompany, setSelectedCompany] = useState(null);
   const chatEndRef = useRef(null);
 
   useEffect(()=>{ fetchPrices(); const t=setInterval(fetchPrices,120000); return()=>clearInterval(t); },[]);
@@ -371,7 +497,19 @@ ANALYSIS GUIDELINES:
     setChatLoading(false);
   }
 
+  function handleViewIntelligence(company){
+    setChatInput('Tell me about '+company.name+' as an investment given recent infrastructure spending trends');
+    setSelectedCompany(null);
+    setTab('intel');
+  }
+
   return React.createElement('div',{className:'app'},
+    selectedCompany && React.createElement(CompanyModal,{
+      company: selectedCompany,
+      prices,
+      onClose: ()=>setSelectedCompany(null),
+      onViewIntelligence: handleViewIntelligence
+    }),
     React.createElement('div',{className:'header'},
       React.createElement('div',{style:{display:'flex',alignItems:'center',gap:12}},
         React.createElement('div',{className:'logo'},React.createElement('span',null,'INFRA'),'ALPHA'),
@@ -401,16 +539,16 @@ ANALYSIS GUIDELINES:
       )
     ),
     React.createElement('div',{className:'content'},
-      tab==='dash'&&React.createElement(Dashboard,{companies,observations,prices,setTab}),
+      tab==='dash'&&React.createElement(Dashboard,{companies,observations,prices,setTab,setSelectedCompany}),
       tab==='obs'&&React.createElement(FieldLog,{observations,obsForm,setObsForm,submitObs}),
-      tab==='watch'&&React.createElement(Watchlist,{companies,prices,updateCompany,setTab,setChatInput}),
+      tab==='watch'&&React.createElement(Watchlist,{companies,prices,updateCompany,setTab,setChatInput,setSelectedCompany}),
       tab==='intel'&&React.createElement(Intelligence,{chat,chatInput,setChatInput,sendChat,chatLoading,chatEndRef})
     )
   );
 }
 
 // ── DASHBOARD ────────────────────────────────────────────────────────────────
-function Dashboard({companies,observations,prices,setTab}){
+function Dashboard({companies,observations,prices,setTab,setSelectedCompany}){
   const topPicks=[...companies].sort((a,b)=>b.score-a.score).slice(0,3);
   const totalObs=observations.length;
   const resolved=observations.filter(o=>o.resolved).length;
@@ -432,7 +570,7 @@ function Dashboard({companies,observations,prices,setTab}){
         React.createElement('div',{className:'section-head'},'Top 3 by Infra Alpha Score'),
         topPicks.map(c=>{
           const p=prices[c.ticker]; const sig=getSignal(c.score);
-          return React.createElement('div',{key:c.ticker,className:'card',style:{marginBottom:10}},
+          return React.createElement('div',{key:c.ticker,className:'card',style:{marginBottom:10,cursor:'pointer'},onClick:()=>setSelectedCompany(c)},
             React.createElement('div',{style:{display:'flex',justifyContent:'space-between',alignItems:'flex-start',marginBottom:8}},
               React.createElement('div',null,
                 React.createElement('div',{style:{fontWeight:700,fontSize:15,color:'#fff',marginBottom:2}},c.name),
@@ -501,7 +639,7 @@ function Dashboard({companies,observations,prices,setTab}){
           React.createElement('tbody',null,
             companies.map(c=>{
               const p=prices[c.ticker]; const sig=getSignal(c.score);
-              return React.createElement('tr',{key:c.ticker},
+              return React.createElement('tr',{key:c.ticker,style:{cursor:'pointer'},onClick:()=>setSelectedCompany(c)},
                 React.createElement('td',{style:{fontFamily:'var(--mono)',color:'var(--accent)',fontSize:12}},c.ticker),
                 React.createElement('td',{style:{fontWeight:500,color:'#fff'}},c.name),
                 React.createElement('td',{style:{fontFamily:'var(--mono)',color:scoreColor(c.score),fontWeight:700}},c.score),
@@ -630,7 +768,7 @@ function FieldLog({observations,obsForm,setObsForm,submitObs}){
 }
 
 // ── WATCHLIST ────────────────────────────────────────────────────────────────
-function Watchlist({companies,prices,updateCompany,setTab,setChatInput}){
+function Watchlist({companies,prices,updateCompany,setTab,setChatInput,setSelectedCompany}){
   const [filter,setFilter]=useState('all');
   const filtered=filter==='all'?companies:
     filter==='tier1'?companies.filter(c=>c.tier===1):
@@ -649,7 +787,7 @@ function Watchlist({companies,prices,updateCompany,setTab,setChatInput}){
     React.createElement('div',{style:{display:'grid',gridTemplateColumns:'repeat(auto-fill,minmax(320px,1fr))',gap:12}},
       filtered.map(c=>{
         const p=prices[c.ticker]; const sig=getSignal(c.score);
-        return React.createElement('div',{key:c.ticker,className:'company-card'},
+        return React.createElement('div',{key:c.ticker,className:'company-card',style:{cursor:'pointer'},onClick:(e)=>{ if(e.target.closest('select,textarea,button')) return; setSelectedCompany(c); }},
           React.createElement('div',{style:{display:'flex',justifyContent:'space-between',alignItems:'flex-start',marginBottom:8}},
             React.createElement('div',null,
               React.createElement('div',{style:{display:'flex',gap:6,alignItems:'center',marginBottom:5}},
