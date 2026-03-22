@@ -1,0 +1,762 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Infra Alpha — Infrastructure Investment Intelligence</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Space+Mono:wght@400;700&display=swap');
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#0a0b0d;--bg1:#0f1115;--bg2:#141720;--bg3:#1a1f2e;
+  --border:rgba(255,255,255,0.08);--border2:rgba(255,255,255,0.16);
+  --text:#e8eaf0;--text2:#8b90a0;--text3:#555d72;
+  --accent:#4d9fff;--green:#00c8a0;--amber:#f0a500;--coral:#f05050;--purple:#8b5cf6;
+  --mono:'Space Mono',monospace;--sans:'Space Grotesk',-apple-system,sans-serif;
+}
+html,body{min-height:100vh;background:var(--bg);color:var(--text);font-family:var(--sans);font-size:14px;line-height:1.6;-webkit-font-smoothing:antialiased}
+input,textarea,select{background:var(--bg2);border:1px solid var(--border2);color:var(--text);font-family:var(--sans);font-size:13px;border-radius:4px;padding:7px 10px;outline:none;width:100%}
+input:focus,textarea:focus,select:focus{border-color:var(--accent)}
+select option{background:var(--bg2)}
+button{font-family:var(--sans);cursor:pointer;border:none;outline:none}
+textarea{resize:vertical;min-height:70px}
+::-webkit-scrollbar{width:5px;height:5px}
+::-webkit-scrollbar-track{background:var(--bg1)}
+::-webkit-scrollbar-thumb{background:var(--border2);border-radius:3px}
+.app{display:flex;flex-direction:column;min-height:100vh}
+.header{border-bottom:1px solid var(--border);padding:12px 20px;display:flex;align-items:center;justify-content:space-between;background:var(--bg1);position:sticky;top:0;z-index:100;position:relative}
+.header::after{content:'';position:absolute;bottom:0;left:0;right:0;height:2px;background:linear-gradient(90deg,var(--accent),var(--green),var(--amber))}
+.logo{font-family:var(--mono);font-size:15px;font-weight:700;letter-spacing:0.08em;color:#fff}
+.logo span{color:var(--accent)}
+.price-bar{display:flex;gap:14px;flex-wrap:wrap;align-items:center}
+.price-chip{font-family:var(--mono);font-size:11px;display:flex;gap:5px;align-items:center}
+.price-chip .sym{color:var(--text3)}
+.price-chip .val{color:var(--text)}
+.price-chip .chg{font-size:10px}
+.chg.up{color:var(--green)}.chg.dn{color:var(--coral)}.chg.flat{color:var(--text3)}
+.tabs{display:flex;gap:0;border-bottom:1px solid var(--border);background:var(--bg1);position:sticky;top:57px;z-index:99}
+.tab{padding:11px 18px;font-size:13px;font-weight:500;color:var(--text3);background:none;border:none;border-bottom:2px solid transparent;cursor:pointer;transition:all 0.15s;white-space:nowrap}
+.tab:hover{color:var(--text2)}
+.tab.active{color:var(--accent);border-bottom-color:var(--accent)}
+.content{flex:1;padding:20px;max-width:1200px;margin:0 auto;width:100%}
+.section-head{font-family:var(--mono);font-size:10px;letter-spacing:0.12em;text-transform:uppercase;color:var(--text3);margin-bottom:12px;padding-bottom:6px;border-bottom:1px solid var(--border)}
+.card{background:var(--bg1);border:1px solid var(--border);border-radius:6px;padding:16px;margin-bottom:12px}
+.card.green{border-color:rgba(0,200,160,0.25);background:rgba(0,200,160,0.04)}
+.card.amber{border-color:rgba(240,165,0,0.25);background:rgba(240,165,0,0.04)}
+.card.blue{border-color:rgba(77,159,255,0.25);background:rgba(77,159,255,0.04)}
+.card.coral{border-color:rgba(240,80,80,0.25);background:rgba(240,80,80,0.04)}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.grid3{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
+.grid4{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}
+@media(max-width:900px){.grid3,.grid4{grid-template-columns:1fr 1fr}}
+@media(max-width:600px){.grid2,.grid3,.grid4{grid-template-columns:1fr}.price-bar{display:none}}
+.stat{background:var(--bg1);border:1px solid var(--border);border-radius:6px;padding:14px}
+.stat .label{font-family:var(--mono);font-size:10px;text-transform:uppercase;letter-spacing:0.1em;color:var(--text3);margin-bottom:5px}
+.stat .value{font-size:1.8rem;font-weight:700;color:#fff;line-height:1.1}
+.stat .sub{font-size:11px;color:var(--text3);margin-top:4px}
+.company-card{background:var(--bg1);border:1px solid var(--border);border-radius:6px;padding:16px;transition:border-color 0.15s}
+.company-card:hover{border-color:var(--border2)}
+.company-card .ticker{font-family:var(--mono);font-size:11px;color:var(--accent);background:rgba(77,159,255,0.1);border:1px solid rgba(77,159,255,0.2);padding:2px 8px;border-radius:2px}
+.company-card .name{font-weight:600;font-size:15px;color:#fff;margin:7px 0 2px}
+.company-card .cat{font-family:var(--mono);font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:0.08em;margin-bottom:8px}
+.company-card .desc{font-size:12px;color:var(--text2);line-height:1.6;margin-bottom:10px}
+.score-row{display:flex;align-items:center;gap:8px;margin-bottom:8px}
+.score-bar{flex:1;height:3px;background:var(--bg3);border-radius:2px;overflow:hidden}
+.score-fill{height:100%;border-radius:2px;transition:width 0.5s}
+.signal-badge{display:inline-block;font-family:var(--mono);font-size:10px;padding:2px 7px;border-radius:2px;margin:0 3px 3px 0}
+.tags{margin-bottom:8px}
+.price-info{display:flex;align-items:baseline;gap:10px;margin-bottom:8px}
+.price-big{font-family:var(--mono);font-size:18px;font-weight:700;color:#fff}
+.price-chg{font-family:var(--mono);font-size:12px}
+.btn{display:inline-flex;align-items:center;gap:5px;padding:8px 16px;border-radius:4px;font-size:13px;font-weight:500;cursor:pointer;transition:all 0.15s}
+.btn-primary{background:var(--accent);color:#fff;border:none}
+.btn-primary:hover{background:#3d8fff}
+.btn-ghost{background:none;color:var(--text2);border:1px solid var(--border2)}
+.btn-ghost:hover{color:var(--text);border-color:var(--accent)}
+.btn-green{background:var(--green);color:#000;border:none}
+.btn-green:hover{opacity:0.9}
+.btn-sm{padding:5px 12px;font-size:11px}
+.form-group{margin-bottom:12px}
+.form-group label{display:block;font-family:var(--mono);font-size:10px;text-transform:uppercase;letter-spacing:0.1em;color:var(--text3);margin-bottom:5px}
+.form-row{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.obs-item{background:var(--bg1);border:1px solid var(--border);border-radius:5px;padding:12px 14px;margin-bottom:8px}
+.obs-item .obs-header{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:5px}
+.obs-item .mfr{font-weight:600;font-size:14px;color:#fff}
+.obs-item .meta{font-family:var(--mono);font-size:10px;color:var(--text3)}
+.obs-item .resolved{font-family:var(--mono);font-size:10px;color:var(--green);background:rgba(0,200,160,0.1);padding:2px 8px;border-radius:2px;display:inline-block;margin-top:5px}
+.chat-wrap{display:flex;flex-direction:column;height:calc(100vh - 200px);min-height:450px}
+.chat-messages{flex:1;overflow-y:auto;padding-bottom:12px}
+.msg{margin-bottom:14px;display:flex;flex-direction:column}
+.msg.user .bubble{align-self:flex-end;background:var(--bg3);border:1px solid var(--border2);border-radius:8px 8px 2px 8px;padding:10px 14px;max-width:80%;font-size:13px;color:var(--text)}
+.msg.assistant .bubble{align-self:flex-start;background:rgba(77,159,255,0.06);border:1px solid rgba(77,159,255,0.2);border-radius:8px 8px 8px 2px;padding:10px 14px;max-width:90%;font-size:13px;color:var(--text);line-height:1.7;white-space:pre-wrap}
+.msg .role-label{font-family:var(--mono);font-size:10px;color:var(--text3);margin-bottom:4px}
+.msg.user .role-label{align-self:flex-end}
+.chat-input-row{display:flex;gap:8px;padding-top:12px;border-top:1px solid var(--border)}
+.chat-input-row input{flex:1}
+.loading-dots span{animation:blink 1.2s infinite}
+.loading-dots span:nth-child(2){animation-delay:0.2s}
+.loading-dots span:nth-child(3){animation-delay:0.4s}
+@keyframes blink{0%,100%{opacity:0.2}50%{opacity:1}}
+.pos-select{font-family:var(--mono);font-size:11px;padding:4px 8px;border-radius:3px;background:var(--bg2);border:1px solid var(--border2);color:var(--text2);width:100%}
+.notes-input{font-size:12px;padding:6px 10px;min-height:54px}
+.refresh-btn{font-family:var(--mono);font-size:10px;padding:4px 10px;border-radius:3px;background:none;border:1px solid var(--border2);color:var(--text3);cursor:pointer}
+.refresh-btn:hover{color:var(--accent);border-color:var(--accent)}
+.live-dot{width:6px;height:6px;border-radius:50%;background:var(--green);display:inline-block;animation:pulse 2s infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:0.4}}
+.empty-state{text-align:center;padding:48px 20px;color:var(--text3)}
+.empty-state .icon{font-size:36px;margin-bottom:12px}
+.empty-state p{font-size:13px;line-height:1.6}
+.rating-input{display:flex;gap:6px;align-items:center}
+.rating-btn{width:30px;height:30px;border-radius:3px;border:1px solid var(--border2);background:var(--bg2);color:var(--text2);font-size:12px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all 0.1s}
+.rating-btn.active{background:var(--accent);border-color:var(--accent);color:#fff}
+.context-hint{font-size:11px;color:var(--text3);margin-top:5px;font-style:italic}
+.tier-badge{font-family:var(--mono);font-size:9px;padding:1px 6px;border-radius:2px;background:rgba(255,255,255,0.05);color:var(--text3);border:1px solid var(--border);text-transform:uppercase;letter-spacing:0.08em}
+.tier-badge.t1{background:rgba(0,200,160,0.08);color:var(--green);border-color:rgba(0,200,160,0.2)}
+table{width:100%;border-collapse:collapse;font-size:12px}
+th{text-align:left;padding:6px 10px;font-family:var(--mono);font-size:10px;text-transform:uppercase;letter-spacing:0.08em;color:var(--text3);border-bottom:1px solid var(--border);background:var(--bg2)}
+td{padding:8px 10px;border-bottom:1px solid var(--border);vertical-align:middle}
+.mini-chart{display:flex;gap:2px;align-items:flex-end;height:28px}
+.mini-bar{width:6px;border-radius:1px;background:var(--accent);opacity:0.6}
+</style>
+</head>
+<body>
+<div id="root"></div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.production.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js"></script>
+
+<script>
+const { useState, useEffect, useRef, useCallback } = React;
+
+// ── STORAGE (localStorage wrapper) ─────────────────────────────────────────
+const Store = {
+  get(k){ try{ return JSON.parse(localStorage.getItem('ia_'+k)); }catch(e){ return null; } },
+  set(k,v){ try{ localStorage.setItem('ia_'+k,JSON.stringify(v)); }catch(e){} },
+};
+
+// ── COMPANY DATA ────────────────────────────────────────────────────────────
+const BASE_COMPANIES = [
+  { ticker:'VRT', name:'Vertiv Holdings', cat:'UPS / Thermal / Power', tier:1, score:94,
+    dcPct:100, cycle:5, crit:5, lock:4, sup:5,
+    desc:'Pure-play pick-and-shovel. UPS systems, thermal management, liquid cooling. $15B backlog. 30%+ 2026 revenue growth guidance. Just added to S&P 500.',
+    tags:['Recurring','Mission Critical','Vendor Lock-In','100% DC'], base:145 },
+  { ticker:'ETN', name:'Eaton Corporation', cat:'Breakers / UPS / Switchgear', tier:1, score:88,
+    dcPct:35, cycle:7, crit:5, lock:3, sup:4,
+    desc:'The breakers and UPS Frank physically swaps. Diversified industrial with fast-growing DC segment. Data center orders up 70%.',
+    tags:['Recurring','Mission Critical','Growing DC'], base:350 },
+  { ticker:'SBGSY', name:'Schneider Electric', cat:'UPS / PDU / DCIM Software', tier:1, score:87,
+    dcPct:55, cycle:6, crit:5, lock:5, sup:4,
+    desc:'EcoStruxure platform: UPS, PDUs, DCIM, energy management. Software layer creates deep vendor lock-in. Vertiv\'s closest global rival.',
+    tags:['Recurring','Mission Critical','Software Lock-In'], base:90 },
+  { ticker:'ABB', name:'ABB Ltd', cat:'Switchgear / UPS / Controls', tier:1, score:83,
+    dcPct:30, cycle:8, crit:5, lock:3, sup:3,
+    desc:'Modular switchgear, breakers, UPS, medium-voltage architecture. New AI-ready SACE Emax 3 breaker. Top 5 globally in DC power.',
+    tags:['Recurring','Mission Critical'], base:52 },
+  { ticker:'CMI', name:'Cummins Inc', cat:'Generators / Backup Power', tier:1, score:76,
+    dcPct:25, cycle:12, crit:5, lock:3, sup:3,
+    desc:'Diesel and alternative backup generators. AI data centers pushing power density requirements up. Partnered with Vertiv on integrated power solutions.',
+    tags:['Mission Critical','Service Recurring'], base:310 },
+  { ticker:'NVT', name:'nVent Electric', cat:'Enclosures / Liquid Cooling', tier:1, score:78,
+    dcPct:40, cycle:6, crit:4, lock:3, sup:3,
+    desc:'Liquid cooling systems, thermal enclosures, cable management. Q3 2025 sales +35%. Solving the same AI rack density problem as Vertiv.',
+    tags:['Recurring','High Criticality'], base:78 },
+  { ticker:'ROK', name:'Rockwell Automation', cat:'PLC / Control Systems', tier:2, score:66,
+    dcPct:15, cycle:10, crit:4, lock:4, sup:3,
+    desc:'PLC and automation control systems — exactly what Frank replaces when swapping PLCs. Dominant in industrial controls with expanding DC applications.',
+    tags:['Vendor Lock-In','PLC Leader'], base:285 },
+  { ticker:'CAT', name:'Caterpillar Inc', cat:'Generators / Power Systems', tier:2, score:68,
+    dcPct:20, cycle:12, crit:5, lock:2, sup:2,
+    desc:'Generator systems for large data center facilities. Testing hydrogen fuel cell backup. Data center demand driving new product lines.',
+    tags:['Mission Critical'], base:365 },
+  { ticker:'ENS', name:'EnerSys', cat:'Battery / Energy Storage', tier:2, score:71,
+    dcPct:45, cycle:8, crit:5, lock:3, sup:3,
+    desc:'Industrial battery systems for DC UPS backup. Mission-critical runtime for Tier 3/4 data centers. Dominant in VRLA and lithium DC backup power.',
+    tags:['Mission Critical','Recurring'], base:88 },
+  { ticker:'HUBB', name:'Hubbell Inc', cat:'Wiring / Electrical Distribution', tier:2, score:64,
+    dcPct:20, cycle:15, crit:3, lock:2, sup:3,
+    desc:'Electrical wiring devices and distribution products. In every data center build-out. Steady compounder with consistent DC demand.',
+    tags:['Build-Out Play'], base:390 },
+  { ticker:'AMETEK', name:'AMETEK Inc', cat:'Power / Electronic Instruments', tier:2, score:69,
+    dcPct:25, cycle:10, crit:4, lock:3, sup:3,
+    desc:'Electronic instruments and electromechanical devices. Power quality monitoring and precision power for DC environments.',
+    tags:['Instruments','Recurring'], base:185 },
+];
+
+const BRAND_MAP = {
+  'eaton':['ETN'],'powerware':['ETN'],'tripplite':['ETN'],'tripp lite':['ETN'],
+  'vertiv':['VRT'],'liebert':['VRT'],'geist':['VRT'],'chloride':['VRT'],
+  'schneider':['SBGSY'],'apc':['SBGSY'],'square d':['SBGSY'],'squared':['SBGSY'],
+  'abb':['ABB'],
+  'rockwell':['ROK'],'allen-bradley':['ROK'],'allen bradley':['ROK'],'allenbradley':['ROK'],
+  'caterpillar':['CAT'],
+  'cummins':['CMI'],'onan':['CMI'],
+  'nvent':['NVT'],'hoffman':['NVT'],'schroff':['NVT'],
+  'enersys':['ENS'],'hawker':['ENS'],
+};
+
+function resolveMfr(raw) {
+  const lo = raw.toLowerCase().replace(/[^a-z0-9\s-]/g,'');
+  for(const [brand,tickers] of Object.entries(BRAND_MAP)){
+    if(lo.includes(brand)) return tickers[0];
+  }
+  return null;
+}
+
+function getSignal(score){
+  if(score>=85) return {label:'Strong Buy',color:'#00c8a0'};
+  if(score>=75) return {label:'Buy',color:'#4d9fff'};
+  if(score>=65) return {label:'Watch',color:'#f0a500'};
+  return {label:'Research',color:'#8b90a0'};
+}
+function scoreColor(s){
+  if(s>=85) return '#00c8a0';
+  if(s>=75) return '#4d9fff';
+  if(s>=65) return '#f0a500';
+  return '#8b90a0';
+}
+
+// ── ROOT APP ─────────────────────────────────────────────────────────────────
+function InfraAlpha(){
+  const [tab, setTab] = useState('dash');
+  const [companies, setCompanies] = useState(()=>{
+    const saved = Store.get('companies');
+    return saved || BASE_COMPANIES.map(c=>({...c,position:'watching',notes:'',obsCount:0}));
+  });
+  const [observations, setObservations] = useState(()=> Store.get('observations')||[]);
+  const [prices, setPrices] = useState({});
+  const [priceState, setPriceState] = useState('loading');
+  const [chat, setChat] = useState(()=> Store.get('chat')||[{role:'assistant',content:'Welcome to Infra Alpha Intelligence.\n\nI\'m your AI analyst. I know your scoring model, the infrastructure investment thesis, and every field observation you log here. No API key needed — I\'m running locally.\n\nAsk me anything:\n\n• "Which company is the best entry point right now?"\n• "What does my observation data tell us about upcoming revenue peaks?"\n• "Compare VRT and ETN for a long-term hold."\n• "Build me a basket strategy from the top picks."'}]);
+  const [obsForm, setObsForm] = useState({mfr:'',model:'',cat:'power',sub:'ups',ctx:'replacing',crit:3,age:'',notes:''});
+  const [chatInput, setChatInput] = useState('');
+  const [chatLoading, setChatLoading] = useState(false);
+  const chatEndRef = useRef(null);
+
+  useEffect(()=>{ fetchPrices(); const t=setInterval(fetchPrices,120000); return()=>clearInterval(t); },[]);
+  useEffect(()=>{ chatEndRef.current?.scrollIntoView({behavior:'smooth'}); },[chat]);
+  useEffect(()=>{ Store.set('observations',observations); syncObsCounts(); },[observations]);
+  useEffect(()=>{ Store.set('companies',companies); },[companies]);
+
+  function syncObsCounts(){
+    setCompanies(prev=>prev.map(c=>({...c,obsCount:observations.filter(o=>o.resolved===c.ticker).length})));
+  }
+
+  async function fetchPrices(){
+    setPriceState('loading');
+    try {
+      const tickers = [...BASE_COMPANIES.map(c=>c.ticker)];
+      const r = await fetch(`/api/prices?symbols=${tickers.join(',')}`, {signal: AbortSignal.timeout(10000)});
+      if(!r.ok) throw new Error('price api failed');
+      const data = await r.json();
+      if(data.error) throw new Error(data.error);
+      const m = {};
+      for(const [ticker, info] of Object.entries(data)){
+        m[ticker] = info;
+      }
+      if(Object.keys(m).length >= 4){ setPrices(m); setPriceState('live'); return; }
+      throw new Error('insufficient data');
+    } catch(e){
+      // fallback: simulated prices with slight randomness
+      const fb={};
+      BASE_COMPANIES.forEach(c=>{
+        const rand=(Math.random()-0.5)*0.04;
+        const price=parseFloat((c.base*(1+rand)).toFixed(2));
+        const changePct=parseFloat((rand*100).toFixed(2));
+        const history=Array.from({length:12},(_,i)=>parseFloat((c.base*(1+(rand*i/12))).toFixed(2)));
+        fb[c.ticker]={price,change:parseFloat((price-c.base).toFixed(2)),changePct,history};
+      });
+      setPrices(fb);
+      setPriceState('fallback');
+    }
+  }
+
+  function submitObs(e){
+    e.preventDefault();
+    if(!obsForm.mfr.trim()) return;
+    const resolved=resolveMfr(obsForm.mfr);
+    const obs={
+      id:Date.now().toString(),
+      mfr:obsForm.mfr,model:obsForm.model,cat:obsForm.cat,sub:obsForm.sub,
+      ctx:obsForm.ctx,crit:obsForm.crit,age:obsForm.age,notes:obsForm.notes,
+      resolved,ts:new Date().toISOString()
+    };
+    setObservations(prev=>[obs,...prev]);
+    setObsForm({mfr:'',model:'',cat:'power',sub:'ups',ctx:'replacing',crit:3,age:'',notes:''});
+  }
+
+  function updateCompany(ticker,changes){
+    setCompanies(prev=>prev.map(c=>c.ticker===ticker?{...c,...changes}:c));
+  }
+
+  async function sendChat(e){
+    e?.preventDefault();
+    if(!chatInput.trim()||chatLoading) return;
+    const userMsg={role:'user',content:chatInput};
+    const newChat=[...chat,userMsg];
+    setChat(newChat); setChatInput(''); setChatLoading(true);
+
+    const obsCtx=observations.slice(0,20).map(o=>
+      `• ${o.mfr}${o.model?' '+o.model:''} | ${o.cat}/${o.sub} | ${o.ctx} | age:${o.age||'unknown'}yr | criticality:${o.crit}/5${o.resolved?` → resolved to ${o.resolved}`:' → UNRESOLVED'}${o.notes?' | notes:"'+o.notes+'"':''}`
+    ).join('\n')||'No field observations logged yet.';
+
+    const compCtx=companies.map(c=>{
+      const p=prices[c.ticker];
+      const pStr=p?`$${p.price?.toFixed(2)} (${p.changePct>=0?'+':''}${p.changePct?.toFixed(2)}%)`:'price unavailable';
+      return `${c.ticker} | Score:${c.score} | ${c.cat} | DC Revenue:${c.dcPct}% | Replacement Cycle:${c.cycle}yr | Criticality:${c.crit}/5 | Price:${pStr} | Position:${c.position} | Field Observations:${c.obsCount}${c.notes?` | Frank's notes:"${c.notes}"`:''}`
+    }).join('\n');
+
+    const systemPrompt=`You are the Infra Alpha intelligence layer — a specialized investment analyst focused on data center physical infrastructure investing.
+
+ABOUT THE USER:
+Frank is a Senior Chief Engineer at BP, managing a critical data center that processes Mercantile Exchange and BP transactions. He personally replaces batteries, UPS systems, PLC/control systems, and breakers in live Tier III/IV facilities on weekends. His field observations are pre-earnings intelligence — he sees component replacement cycles from the inside, weeks before it shows up in supplier revenue numbers.
+
+CORE INVESTMENT THESIS:
+The data center maintenance layer is the "pick and shovel" play on AI infrastructure. Every 5–15 years, batteries get replaced, breakers get swapped, PLCs get upgraded, cooling gets overhauled. These are compliance-driven, uptime-critical, non-discretionary purchases with predictable cycles. The global data center infrastructure market is heading toward $1 trillion in annual spending by 2030, with $3 trillion committed through the decade.
+
+SCORING MODEL (Infra Alpha Score 0–100):
+- Replacement Frequency (25%): shorter cycles = more recurring revenue predictability
+- Criticality (25%): higher = non-negotiable spend even in downturns
+- DC Revenue Exposure (20%): pure plays score highest
+- Vendor Lock-In (15%): proprietary software/connectors = pricing power
+- Supply Chain Position (15%): direct-to-operator relationships score best
+
+KEY COMPANIES (scored and ranked):
+VRT (94) — Vertiv Holdings: Pure-play. UPS, liquid cooling, thermal management. $15B backlog, 30%+ growth, just joined S&P 500.
+ETN (88) — Eaton Corporation: Breakers, UPS, switchgear. 70% DC order growth. Grid-to-chip narrative.
+SBGSY (87) — Schneider Electric: EcoStruxure platform. Deep software lock-in on top of hardware.
+ABB (83) — ABB Ltd: Switchgear, UPS, medium-voltage. New AI-ready breaker line.
+NVT (78) — nVent Electric: Liquid cooling, enclosures. 35% sales growth, undervalued.
+CMI (76) — Cummins: Backup generators. Long replacement cycles but mission-critical.
+AMETEK (69) — AMETEK Inc: Power quality instruments, precision power equipment.
+CAT (68) — Caterpillar: Generators. DC exposure growing.
+ENS (71) — EnerSys: Industrial batteries for DC UPS backup. Dominant in VRLA/lithium DC backup.
+ROK (66) — Rockwell Automation: PLCs, control systems. Strong lock-in, limited DC focus.
+HUBB (64) — Hubbell Inc: Wiring, electrical distribution. Steady compounder, in every DC build-out.
+
+FRANK'S FIELD OBSERVATIONS (most recent first, these are the core signal):
+${obsCtx}
+
+CURRENT COMPANY DATA WITH PRICES:
+${compCtx}
+
+ANALYSIS GUIDELINES:
+- Be direct and specific. Frank is an engineer, not a retail investor. Skip the disclaimers, give real directional guidance.
+- Reference his actual field observations when relevant — if he's replacing Eaton breakers, that's direct ETN signal.
+- Identify patterns: if one brand appears multiple times in observations, explicitly call that out.
+- Flag replacement cycle peaks — a spike in observations for a component category can predict earnings beats 1–2 quarters out.
+- Give clear entry signals: buy/accumulate/hold/trim/avoid with infrastructure-cycle reasoning, not just financial metrics.
+- Note when a company has zero field observations — that means the thesis is theoretical, not validated.
+- This is for research and educational purposes. Frank makes his own investment decisions.
+- Keep responses focused and actionable. Plain text, no markdown formatting.`;
+
+    try {
+      const r = await fetch('/api/chat', {
+        method: 'POST',
+        headers: {'Content-Type':'application/json'},
+        body: JSON.stringify({
+          messages: newChat.slice(-10).map(m=>({role:m.role, content:m.content})),
+          systemPrompt: systemPrompt
+        }),
+        signal: AbortSignal.timeout(35000)
+      });
+      if(!r.ok) throw new Error('chat api failed');
+      const data = await r.json();
+      const assistantMsg = {role:'assistant', content: data.content || 'No response received.'};
+      const final=[...newChat,assistantMsg];
+      setChat(final);
+      Store.set('chat',final.slice(-30));
+    } catch(err){
+      const final=[...newChat,{role:'assistant',content:'Error: '+err.message+'\n\nThe AI service may be temporarily unavailable. Try again in a moment.'}];
+      setChat(final);
+    }
+    setChatLoading(false);
+  }
+
+  return React.createElement('div',{className:'app'},
+    React.createElement('div',{className:'header'},
+      React.createElement('div',{style:{display:'flex',alignItems:'center',gap:12}},
+        React.createElement('div',{className:'logo'},React.createElement('span',null,'INFRA'),'ALPHA'),
+        priceState==='live'&&React.createElement('span',{style:{display:'inline-flex',alignItems:'center',gap:4}},
+          React.createElement('span',{className:'live-dot'}),
+          React.createElement('span',{style:{fontFamily:'var(--mono)',fontSize:9,color:'var(--green)'}})
+        ),
+        priceState==='fallback'&&React.createElement('button',{className:'refresh-btn',onClick:fetchPrices},'↻'),
+      ),
+      React.createElement('div',{style:{display:'flex',gap:12,alignItems:'center'}},
+        React.createElement('div',{className:'price-bar'},
+          ['VRT','ETN','SBGSY','ABB','NVT'].map(sym=>{
+            const p=prices[sym]; if(!p) return null;
+            const chgCls=p.changePct>0?'up':p.changePct<0?'dn':'flat';
+            return React.createElement('div',{key:sym,className:'price-chip'},
+              React.createElement('span',{className:'sym'},sym),
+              React.createElement('span',{className:'val'},'$'+p.price?.toFixed(2)),
+              React.createElement('span',{className:'chg '+chgCls},(p.changePct>=0?'+':'')+p.changePct?.toFixed(1)+'%')
+            );
+          })
+        )
+      )
+    ),
+    React.createElement('div',{className:'tabs'},
+      [['dash','Dashboard'],['obs','Field Log'],['watch','Watchlist'],['intel','Intelligence']].map(([id,label])=>
+        React.createElement('button',{key:id,className:'tab'+(tab===id?' active':''),onClick:()=>setTab(id)},label)
+      )
+    ),
+    React.createElement('div',{className:'content'},
+      tab==='dash'&&React.createElement(Dashboard,{companies,observations,prices,setTab}),
+      tab==='obs'&&React.createElement(FieldLog,{observations,obsForm,setObsForm,submitObs}),
+      tab==='watch'&&React.createElement(Watchlist,{companies,prices,updateCompany,setTab,setChatInput}),
+      tab==='intel'&&React.createElement(Intelligence,{chat,chatInput,setChatInput,sendChat,chatLoading,chatEndRef})
+    )
+  );
+}
+
+// ── DASHBOARD ────────────────────────────────────────────────────────────────
+function Dashboard({companies,observations,prices,setTab}){
+  const topPicks=[...companies].sort((a,b)=>b.score-a.score).slice(0,3);
+  const totalObs=observations.length;
+  const resolved=observations.filter(o=>o.resolved).length;
+  const highConv=companies.filter(c=>c.score>=85).length;
+  return React.createElement('div',null,
+    React.createElement('div',{className:'grid4',style:{marginBottom:20}},
+      [{l:'Field Observations',v:totalObs,s:resolved+' company-resolved',c:'var(--accent)'},
+       {l:'High Conviction',v:highConv,s:'score 85+',c:'var(--green)'},
+       {l:'Avg IA Score',v:Math.round(companies.reduce((a,c)=>a+c.score,0)/companies.length),s:'across watchlist',c:'var(--amber)'},
+       {l:'Companies Tracked',v:companies.length,s:companies.filter(c=>c.position!=='watching').length+' active positions',c:'#fff'}
+      ].map(({l,v,s,c})=>React.createElement('div',{key:l,className:'stat'},
+        React.createElement('div',{className:'label'},l),
+        React.createElement('div',{className:'value',style:{color:c}},v),
+        React.createElement('div',{className:'sub'},s)
+      ))
+    ),
+    React.createElement('div',{className:'grid2'},
+      React.createElement('div',null,
+        React.createElement('div',{className:'section-head'},'Top 3 by Infra Alpha Score'),
+        topPicks.map(c=>{
+          const p=prices[c.ticker]; const sig=getSignal(c.score);
+          return React.createElement('div',{key:c.ticker,className:'card',style:{marginBottom:10}},
+            React.createElement('div',{style:{display:'flex',justifyContent:'space-between',alignItems:'flex-start',marginBottom:8}},
+              React.createElement('div',null,
+                React.createElement('div',{style:{fontWeight:700,fontSize:15,color:'#fff',marginBottom:2}},c.name),
+                React.createElement('div',{style:{fontFamily:'var(--mono)',fontSize:10,color:'var(--text3)',textTransform:'uppercase'}},c.cat)
+              ),
+              React.createElement('div',{style:{textAlign:'right'}},
+                React.createElement('div',{style:{fontFamily:'var(--mono)',fontSize:22,fontWeight:700,color:scoreColor(c.score),lineHeight:1}},c.score),
+                React.createElement('div',{style:{fontFamily:'var(--mono)',fontSize:10,color:sig.color,marginTop:3}},sig.label)
+              )
+            ),
+            p&&React.createElement('div',{style:{display:'flex',gap:10,alignItems:'baseline',marginBottom:8}},
+              React.createElement('span',{style:{fontFamily:'var(--mono)',fontSize:16,color:'#fff'}},'$'+p.price?.toFixed(2)),
+              React.createElement('span',{style:{fontFamily:'var(--mono)',fontSize:11,color:p.changePct>=0?'var(--green)':'var(--coral)'}},
+                (p.changePct>=0?'+':'')+p.changePct?.toFixed(2)+'%'
+              )
+            ),
+            React.createElement('div',{className:'score-row'},
+              React.createElement('div',{className:'score-bar'},
+                React.createElement('div',{className:'score-fill',style:{width:c.score+'%',background:scoreColor(c.score)}})
+              ),
+              React.createElement('span',{style:{fontFamily:'var(--mono)',fontSize:10,color:'var(--text3)',minWidth:36}},c.score+'/100')
+            )
+          );
+        })
+      ),
+      React.createElement('div',null,
+        React.createElement('div',{className:'section-head'},'Recent Field Observations'),
+        observations.length===0?
+          React.createElement('div',{className:'card'},
+            React.createElement('div',{className:'empty-state'},
+              React.createElement('div',{className:'icon'},'📸'),
+              React.createElement('p',null,'No observations yet. Go to Field Log and start recording what you\'re replacing this weekend.')
+            )
+          ):
+          observations.slice(0,5).map(o=>React.createElement('div',{key:o.id,className:'obs-item'},
+            React.createElement('div',{className:'obs-header'},
+              React.createElement('div',null,
+                React.createElement('div',{className:'mfr'},o.mfr+(o.model?' — '+o.model:'')),
+                React.createElement('div',{style:{fontFamily:'var(--mono)',fontSize:10,color:'var(--text3)',marginTop:2}},
+                  o.cat+'/'+o.sub+' · '+o.ctx+(o.age?' · '+o.age+'yr':'')+' · crit:'+o.crit+'/5'
+                )
+              ),
+              React.createElement('div',{className:'meta'},new Date(o.ts).toLocaleDateString())
+            ),
+            o.notes&&React.createElement('div',{style:{fontSize:11,color:'var(--text2)',marginTop:4,fontStyle:'italic',lineHeight:1.55}},'"'+o.notes+'"'),
+            o.resolved?
+              React.createElement('div',{className:'resolved'},'→ '+o.resolved):
+              React.createElement('div',{style:{fontFamily:'var(--mono)',fontSize:10,color:'var(--text3)',marginTop:4}},'manufacturer not auto-resolved')
+          )),
+        React.createElement('button',{className:'btn btn-ghost',style:{width:'100%',justifyContent:'center',marginTop:8},onClick:()=>setTab('obs')},
+          '+ Log New Observation'
+        )
+      )
+    ),
+    React.createElement('div',{style:{marginTop:20}},
+      React.createElement('div',{className:'section-head'},'Full Market Snapshot'),
+      React.createElement('div',{style:{background:'var(--bg1)',border:'1px solid var(--border)',borderRadius:6,overflow:'hidden'}},
+        React.createElement('table',null,
+          React.createElement('thead',null,
+            React.createElement('tr',null,
+              ['Ticker','Company','IA Score','Signal','Price','Chg %','DC Exp','Cycle','Field Obs','Position'].map(h=>
+                React.createElement('th',{key:h},h)
+              )
+            )
+          ),
+          React.createElement('tbody',null,
+            companies.map(c=>{
+              const p=prices[c.ticker]; const sig=getSignal(c.score);
+              return React.createElement('tr',{key:c.ticker},
+                React.createElement('td',{style:{fontFamily:'var(--mono)',color:'var(--accent)',fontSize:12}},c.ticker),
+                React.createElement('td',{style:{fontWeight:500,color:'#fff'}},c.name),
+                React.createElement('td',{style:{fontFamily:'var(--mono)',color:scoreColor(c.score),fontWeight:700}},c.score),
+                React.createElement('td',null,
+                  React.createElement('span',{style:{fontFamily:'var(--mono)',fontSize:10,color:sig.color,background:sig.color+'18',padding:'2px 7px',borderRadius:2}},sig.label)
+                ),
+                React.createElement('td',{style:{fontFamily:'var(--mono)',color:p?'#fff':'var(--text3)'}},p?'$'+p.price?.toFixed(2):'—'),
+                React.createElement('td',{style:{fontFamily:'var(--mono)',color:p?.changePct>=0?'var(--green)':'var(--coral)'}},
+                  p?.changePct!=null?(p.changePct>=0?'+':'')+p.changePct?.toFixed(2)+'%':'—'
+                ),
+                React.createElement('td',{style:{color:'var(--text2)'}},c.dcPct+'%'),
+                React.createElement('td',{style:{color:'var(--text2)'}},c.cycle+'yr'),
+                React.createElement('td',{style:{fontFamily:'var(--mono)',color:c.obsCount>0?'var(--green)':'var(--text3)',fontWeight:c.obsCount>0?700:400}},c.obsCount||'0'),
+                React.createElement('td',{style:{fontFamily:'var(--mono)',fontSize:10,color:'var(--text3)',textTransform:'uppercase'}},c.position)
+              );
+            })
+          )
+        )
+      )
+    )
+  );
+}
+
+// ── FIELD LOG ────────────────────────────────────────────────────────────────
+function FieldLog({observations,obsForm,setObsForm,submitObs}){
+  const set=(k,v)=>setObsForm(f=>({...f,[k]:v}));
+  return React.createElement('div',{className:'grid2'},
+    React.createElement('div',null,
+      React.createElement('div',{className:'section-head'},'Log Field Observation'),
+      React.createElement('form',{onSubmit:submitObs},
+        React.createElement('div',{className:'card'},
+          React.createElement('div',{className:'form-group'},
+            React.createElement('label',null,'Manufacturer *'),
+            React.createElement('input',{value:obsForm.mfr,onChange:e=>set('mfr',e.target.value),placeholder:'e.g. Eaton, Vertiv, Liebert, APC, Allen-Bradley...',required:true})
+          ),
+          React.createElement('div',{className:'form-group'},
+            React.createElement('label',null,'Model / Product Number'),
+            React.createElement('input',{value:obsForm.model,onChange:e=>set('model',e.target.value),placeholder:'e.g. 9355 UPS, SACE Emax 3, PowerWave 33...'})
+          ),
+          React.createElement('div',{className:'form-row'},
+            React.createElement('div',{className:'form-group'},
+              React.createElement('label',null,'Category'),
+              React.createElement('select',{value:obsForm.cat,onChange:e=>set('cat',e.target.value)},
+                ['power','cooling','controls','networking','backup'].map(o=>React.createElement('option',{key:o,value:o},o))
+              )
+            ),
+            React.createElement('div',{className:'form-group'},
+              React.createElement('label',null,'Component Type'),
+              React.createElement('select',{value:obsForm.sub,onChange:e=>set('sub',e.target.value)},
+                ['ups','battery','breaker','switchgear','pdu','plc','generator','cooling','transfer-switch','other'].map(o=>React.createElement('option',{key:o,value:o},o))
+              )
+            )
+          ),
+          React.createElement('div',{className:'form-row'},
+            React.createElement('div',{className:'form-group'},
+              React.createElement('label',null,'Context'),
+              React.createElement('select',{value:obsForm.ctx,onChange:e=>set('ctx',e.target.value)},
+                ['replacing','installing','failed','inspecting','upgrading','testing'].map(o=>React.createElement('option',{key:o,value:o},o))
+              )
+            ),
+            React.createElement('div',{className:'form-group'},
+              React.createElement('label',null,'Age at replacement (years)'),
+              React.createElement('input',{type:'number',min:0,max:40,value:obsForm.age,onChange:e=>set('age',e.target.value),placeholder:'e.g. 6'})
+            )
+          ),
+          React.createElement('div',{className:'form-group'},
+            React.createElement('label',null,'Criticality — 5 = facility goes dark if this fails'),
+            React.createElement('div',{className:'rating-input'},
+              [1,2,3,4,5].map(n=>React.createElement('button',{
+                key:n,type:'button',
+                className:'rating-btn'+(obsForm.crit===n?' active':''),
+                onClick:()=>set('crit',n)
+              },n))
+            ),
+            React.createElement('div',{className:'context-hint'},
+              obsForm.crit===5?'Facility goes dark if this fails':
+              obsForm.crit===4?'Significant outage risk, degraded operations':
+              obsForm.crit===3?'Performance impact, not catastrophic':
+              obsForm.crit===2?'Minor impact, backup systems cover it':
+              'Inconvenient but manageable'
+            )
+          ),
+          React.createElement('div',{className:'form-group'},
+            React.createElement('label',null,'Notes — patterns, failure mode, why it\'s being replaced'),
+            React.createElement('textarea',{className:'notes-input',value:obsForm.notes,onChange:e=>set('notes',e.target.value),placeholder:'e.g. "Third Eaton UPS module failure this year — seems accelerated vs expected 7yr cycle. Replacing with same brand per contract."'})
+          ),
+          React.createElement('button',{type:'submit',className:'btn btn-green',style:{width:'100%',justifyContent:'center',padding:'10px'}},'+ Log Observation')
+        )
+      ),
+      React.createElement('div',{className:'card blue'},
+        React.createElement('div',{style:{fontFamily:'var(--mono)',fontSize:10,color:'var(--accent)',marginBottom:6}}, 'AUTO-RESOLVE MAP'),
+        React.createElement('div',{style:{fontSize:12,color:'var(--text2)',lineHeight:1.7}},
+          'APC / Square D → SBGSY   •   Liebert / Geist → VRT\nPowerWare / Tripp-Lite → ETN   •   Allen-Bradley → ROK\nOnan → CMI   •   Hoffman / Schroff → NVT\nEnerSys / Hawker → ENS\n\nType the brand as you see it on the label. Unknown brands get flagged for manual review.'
+        )
+      )
+    ),
+    React.createElement('div',null,
+      React.createElement('div',{style:{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:12}},
+        React.createElement('div',{className:'section-head',style:{marginBottom:0}},'Observation History'),
+        React.createElement('span',{style:{fontFamily:'var(--mono)',fontSize:11,color:'var(--text3)'}},observations.length+' logged')
+      ),
+      observations.length===0?
+        React.createElement('div',{className:'card'},
+          React.createElement('div',{className:'empty-state'},
+            React.createElement('div',{className:'icon'},'🔧'),
+            React.createElement('p',null,'Start logging what you replace. Every observation is signal. Every replacement age is data that the market doesn\'t have.')
+          )
+        ):
+        observations.map(o=>React.createElement('div',{key:o.id,className:'obs-item'},
+          React.createElement('div',{className:'obs-header'},
+            React.createElement('div',null,
+              React.createElement('div',{className:'mfr'},o.mfr+(o.model?' — '+o.model:'')),
+              React.createElement('div',{style:{fontFamily:'var(--mono)',fontSize:10,color:'var(--text3)',marginTop:2}},
+                o.cat+'/'+o.sub+' · '+o.ctx+(o.age?' · age: '+o.age+'yr':'')+' · criticality: '+o.crit+'/5'
+              )
+            ),
+            React.createElement('div',{className:'meta'},new Date(o.ts).toLocaleDateString())
+          ),
+          o.notes&&React.createElement('div',{style:{fontSize:12,color:'var(--text2)',margin:'6px 0',fontStyle:'italic',lineHeight:1.55}},'"'+o.notes+'"'),
+          o.resolved?
+            React.createElement('div',{className:'resolved'},'→ '+o.resolved+' (auto-resolved)'):
+            React.createElement('div',{style:{fontFamily:'var(--mono)',fontSize:10,color:'var(--amber)',marginTop:4,background:'rgba(240,165,0,0.08)',display:'inline-block',padding:'2px 8px',borderRadius:2}},'⚠ not resolved — verify manually')
+        ))
+    )
+  );
+}
+
+// ── WATCHLIST ────────────────────────────────────────────────────────────────
+function Watchlist({companies,prices,updateCompany,setTab,setChatInput}){
+  const [filter,setFilter]=useState('all');
+  const filtered=filter==='all'?companies:
+    filter==='tier1'?companies.filter(c=>c.tier===1):
+    filter==='tier2'?companies.filter(c=>c.tier===2):
+    companies.filter(c=>c.position===filter);
+
+  return React.createElement('div',null,
+    React.createElement('div',{style:{display:'flex',gap:8,marginBottom:16,flexWrap:'wrap',alignItems:'center'}},
+      React.createElement('div',{className:'section-head',style:{marginBottom:0,marginRight:8}},'Company Intelligence'),
+      [['all','All'],['tier1','Tier 1'],['tier2','Tier 2'],['invested','Invested'],['accumulating','Accumulating']].map(([v,l])=>
+        React.createElement('button',{key:v,className:'btn btn-ghost btn-sm',
+          style:{borderColor:filter===v?'var(--accent)':'',color:filter===v?'var(--accent)':''},
+          onClick:()=>setFilter(v)},l)
+      )
+    ),
+    React.createElement('div',{style:{display:'grid',gridTemplateColumns:'repeat(auto-fill,minmax(320px,1fr))',gap:12}},
+      filtered.map(c=>{
+        const p=prices[c.ticker]; const sig=getSignal(c.score);
+        return React.createElement('div',{key:c.ticker,className:'company-card'},
+          React.createElement('div',{style:{display:'flex',justifyContent:'space-between',alignItems:'flex-start',marginBottom:8}},
+            React.createElement('div',null,
+              React.createElement('div',{style:{display:'flex',gap:6,alignItems:'center',marginBottom:5}},
+                React.createElement('span',{className:'company-card ticker'},c.ticker),
+                React.createElement('span',{className:'tier-badge t'+c.tier},'Tier '+c.tier)
+              ),
+              React.createElement('div',{className:'name'},c.name),
+              React.createElement('div',{className:'cat'},c.cat)
+            ),
+            React.createElement('div',{style:{textAlign:'right'}},
+              React.createElement('div',{style:{fontFamily:'var(--mono)',fontSize:22,fontWeight:700,color:scoreColor(c.score),lineHeight:1}},c.score),
+              React.createElement('div',{style:{fontFamily:'var(--mono)',fontSize:10,color:sig.color,marginTop:3}},sig.label)
+            )
+          ),
+          p&&React.createElement('div',{className:'price-info'},
+            React.createElement('div',{className:'price-big'},'$'+p.price?.toFixed(2)),
+            React.createElement('div',{className:'price-chg',style:{color:p.changePct>=0?'var(--green)':'var(--coral)'}},
+              (p.changePct>=0?'+':'')+p.changePct?.toFixed(2)+'%'
+            )
+          ),
+          React.createElement('div',{className:'score-row'},
+            React.createElement('div',{className:'score-bar'},
+              React.createElement('div',{className:'score-fill',style:{width:c.score+'%',background:scoreColor(c.score)}})
+            ),
+            React.createElement('span',{style:{fontFamily:'var(--mono)',fontSize:10,color:'var(--text3)'}},c.score+'/100')
+          ),
+          React.createElement('div',{className:'tags'},
+            c.tags.map(t=>React.createElement('span',{key:t,className:'signal-badge',style:{
+              background:t.includes('Critical')||t.includes('Mission')?'rgba(240,80,80,0.1)':
+                t.includes('Recurring')?'rgba(0,200,160,0.1)':
+                t.includes('Lock')?'rgba(139,92,246,0.1)':'rgba(77,159,255,0.1)',
+              color:t.includes('Critical')||t.includes('Mission')?'var(--coral)':
+                t.includes('Recurring')?'var(--green)':
+                t.includes('Lock')?'var(--purple)':'var(--accent)',
+              border:'1px solid currentColor'
+            }},t))
+          ),
+          React.createElement('div',{className:'desc'},c.desc),
+          React.createElement('div',{style:{display:'grid',gridTemplateColumns:'repeat(4,1fr)',gap:6,padding:'10px 0',borderTop:'1px solid var(--border)',borderBottom:'1px solid var(--border)',marginBottom:10}},
+            [['DC Rev',c.dcPct+'%'],['Cycle',c.cycle+'yr'],['Crit',c.crit+'/5'],['Field Obs',c.obsCount||'0']].map(([l,v])=>
+              React.createElement('div',{key:l,style:{textAlign:'center'}},
+                React.createElement('div',{style:{fontFamily:'var(--mono)',fontSize:9,color:'var(--text3)',marginBottom:2,textTransform:'uppercase'}},l),
+                React.createElement('div',{style:{fontFamily:'var(--mono)',fontSize:12,color:l==='Field Obs'&&c.obsCount>0?'var(--green)':'#fff',fontWeight:600}},v)
+              )
+            )
+          ),
+          React.createElement('div',{className:'form-group',style:{marginBottom:8}},
+            React.createElement('label',null,'Position'),
+            React.createElement('select',{className:'pos-select',value:c.position,onChange:e=>updateCompany(c.ticker,{position:e.target.value})},
+              ['watching','accumulating','invested','hold','reducing','avoid'].map(o=>React.createElement('option',{key:o,value:o},o))
+            )
+          ),
+          React.createElement('div',{className:'form-group',style:{marginBottom:10}},
+            React.createElement('label',null,'Your Thesis Notes'),
+            React.createElement('textarea',{className:'notes-input',style:{minHeight:48,fontSize:12},value:c.notes,onChange:e=>updateCompany(c.ticker,{notes:e.target.value}),placeholder:'Entry target, hold thesis, concerns, field pattern...'})
+          ),
+          React.createElement('button',{className:'btn btn-ghost btn-sm',style:{width:'100%',justifyContent:'center'},
+            onClick:()=>{ setChatInput('Analyze '+c.ticker+' right now — current buy, hold, or sell signal with infrastructure cycle reasoning.'); setTab('intel'); }
+          },'Ask AI: Analyze '+c.ticker+' →')
+        );
+      })
+    )
+  );
+}
+
+// ── INTELLIGENCE ─────────────────────────────────────────────────────────────
+function Intelligence({chat,chatInput,setChatInput,sendChat,chatLoading,chatEndRef}){
+  const prompts=[
+    'Which company is the best entry point right now?',
+    'What does my field data say about upcoming earnings?',
+    'Compare VRT and ETN — which do I hold longer?',
+    'Build me a basket strategy from the top picks.',
+    'Which positions should I be accumulating vs holding?',
+    'What replacement cycle peaks should I be watching?',
+  ];
+  return React.createElement('div',{className:'chat-wrap'},
+    React.createElement('div',{style:{marginBottom:10}},
+      React.createElement('div',{style:{display:'flex',gap:6,flexWrap:'wrap'}},
+        prompts.map(p=>React.createElement('button',{key:p,className:'btn btn-ghost btn-sm',onClick:()=>setChatInput(p)},p))
+      )
+    ),
+    React.createElement('div',{style:{flex:1,overflowY:'auto'}},
+      chat.map((m,i)=>React.createElement('div',{key:i,className:'msg '+m.role},
+        React.createElement('div',{className:'role-label'},m.role==='user'?'Frank':'Infra Alpha AI'),
+        React.createElement('div',{className:'bubble'},m.content)
+      )),
+      chatLoading&&React.createElement('div',{className:'msg assistant'},
+        React.createElement('div',{className:'role-label'},'Infra Alpha AI'),
+        React.createElement('div',{className:'bubble'},
+          React.createElement('div',{className:'loading-dots'},
+            React.createElement('span',null,'●'),' ',React.createElement('span',null,'●'),' ',React.createElement('span',null,'●')
+          )
+        )
+      ),
+      React.createElement('div',{ref:chatEndRef})
+    ),
+    React.createElement('form',{className:'chat-input-row',onSubmit:sendChat},
+      React.createElement('input',{value:chatInput,onChange:e=>setChatInput(e.target.value),
+        placeholder:'Ask about specific companies, replacement cycles, entry points, portfolio strategy...',
+        disabled:chatLoading}),
+      React.createElement('button',{type:'submit',className:'btn btn-primary',disabled:chatLoading||!chatInput.trim()},
+        chatLoading?'...':'Send')
+    )
+  );
+}
+
+ReactDOM.createRoot(document.getElementById('root')).render(React.createElement(InfraAlpha));
+</script>
+</body>
+</html>
