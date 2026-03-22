@@ -136,50 +136,76 @@ const Store = {
 
 // ── COMPANY DATA ────────────────────────────────────────────────────────────
 const BASE_COMPANIES = [
-  { ticker:'VRT', name:'Vertiv Holdings', cat:'UPS / Thermal / Power', tier:1, score:94,
+  // ── Power & Electrical ──
+  { ticker:'VRT', name:'Vertiv Holdings', cat:'UPS / Thermal / Power', tier:1, score:94, sector:'power', sentiment:'Strong Buy',
     dcPct:100, cycle:5, crit:5, lock:4, sup:5,
     desc:'Pure-play pick-and-shovel. UPS systems, thermal management, liquid cooling. $15B backlog. 30%+ 2026 revenue growth guidance. Just added to S&P 500.',
     tags:['Recurring','Mission Critical','Vendor Lock-In','100% DC'], base:145 },
-  { ticker:'ETN', name:'Eaton Corporation', cat:'Breakers / UPS / Switchgear', tier:1, score:88,
+  { ticker:'ETN', name:'Eaton Corporation', cat:'Breakers / UPS / Switchgear', tier:1, score:88, sector:'power', sentiment:'Strong Buy',
     dcPct:35, cycle:7, crit:5, lock:3, sup:4,
     desc:'The breakers and UPS Frank physically swaps. Diversified industrial with fast-growing DC segment. Data center orders up 70%.',
     tags:['Recurring','Mission Critical','Growing DC'], base:350 },
-  { ticker:'SBGSY', name:'Schneider Electric', cat:'UPS / PDU / DCIM Software', tier:1, score:87,
+  { ticker:'SBGSY', name:'Schneider Electric', cat:'UPS / PDU / DCIM Software', tier:1, score:87, sector:'power',
     dcPct:55, cycle:6, crit:5, lock:5, sup:4,
     desc:'EcoStruxure platform: UPS, PDUs, DCIM, energy management. Software layer creates deep vendor lock-in. Vertiv\'s closest global rival.',
     tags:['Recurring','Mission Critical','Software Lock-In'], base:90 },
-  { ticker:'ABB', name:'ABB Ltd', cat:'Switchgear / UPS / Controls', tier:1, score:83,
+  { ticker:'ABB', name:'ABB Ltd', cat:'Switchgear / UPS / Controls', tier:1, score:83, sector:'power',
     dcPct:30, cycle:8, crit:5, lock:3, sup:3,
     desc:'Modular switchgear, breakers, UPS, medium-voltage architecture. New AI-ready SACE Emax 3 breaker. Top 5 globally in DC power.',
     tags:['Recurring','Mission Critical'], base:52 },
-  { ticker:'CMI', name:'Cummins Inc', cat:'Generators / Backup Power', tier:1, score:76,
+  { ticker:'CMI', name:'Cummins Inc', cat:'Generators / Backup Power', tier:1, score:76, sector:'power',
     dcPct:25, cycle:12, crit:5, lock:3, sup:3,
     desc:'Diesel and alternative backup generators. AI data centers pushing power density requirements up. Partnered with Vertiv on integrated power solutions.',
     tags:['Mission Critical','Service Recurring'], base:310 },
-  { ticker:'NVT', name:'nVent Electric', cat:'Enclosures / Liquid Cooling', tier:1, score:78,
+  { ticker:'NVT', name:'nVent Electric', cat:'Enclosures / Liquid Cooling', tier:1, score:78, sector:'power', sentiment:'Buy',
     dcPct:40, cycle:6, crit:4, lock:3, sup:3,
     desc:'Liquid cooling systems, thermal enclosures, cable management. Q3 2025 sales +35%. Solving the same AI rack density problem as Vertiv.',
     tags:['Recurring','High Criticality'], base:78 },
-  { ticker:'ROK', name:'Rockwell Automation', cat:'PLC / Control Systems', tier:2, score:66,
+  { ticker:'ROK', name:'Rockwell Automation', cat:'PLC / Control Systems', tier:2, score:66, sector:'power',
     dcPct:15, cycle:10, crit:4, lock:4, sup:3,
     desc:'PLC and automation control systems — exactly what Frank replaces when swapping PLCs. Dominant in industrial controls with expanding DC applications.',
     tags:['Vendor Lock-In','PLC Leader'], base:285 },
-  { ticker:'CAT', name:'Caterpillar Inc', cat:'Generators / Power Systems', tier:2, score:68,
+  { ticker:'CAT', name:'Caterpillar Inc', cat:'Generators / Power Systems', tier:2, score:68, sector:'power',
     dcPct:20, cycle:12, crit:5, lock:2, sup:2,
     desc:'Generator systems for large data center facilities. Testing hydrogen fuel cell backup. Data center demand driving new product lines.',
     tags:['Mission Critical'], base:365 },
-  { ticker:'ENS', name:'EnerSys', cat:'Battery / Energy Storage', tier:2, score:71,
+  { ticker:'ENS', name:'EnerSys', cat:'Battery / Energy Storage', tier:2, score:71, sector:'power',
     dcPct:45, cycle:8, crit:5, lock:3, sup:3,
     desc:'Industrial battery systems for DC UPS backup. Mission-critical runtime for Tier 3/4 data centers. Dominant in VRLA and lithium DC backup power.',
     tags:['Mission Critical','Recurring'], base:88 },
-  { ticker:'HUBB', name:'Hubbell Inc', cat:'Wiring / Electrical Distribution', tier:2, score:64,
+  { ticker:'HUBB', name:'Hubbell Inc', cat:'Wiring / Electrical Distribution', tier:2, score:64, sector:'power',
     dcPct:20, cycle:15, crit:3, lock:2, sup:3,
     desc:'Electrical wiring devices and distribution products. In every data center build-out. Steady compounder with consistent DC demand.',
     tags:['Build-Out Play'], base:390 },
-  { ticker:'AMETEK', name:'AMETEK Inc', cat:'Power / Electronic Instruments', tier:2, score:69,
+  { ticker:'AMETEK', name:'AMETEK Inc', cat:'Power / Electronic Instruments', tier:2, score:69, sector:'power',
     dcPct:25, cycle:10, crit:4, lock:3, sup:3,
     desc:'Electronic instruments and electromechanical devices. Power quality monitoring and precision power for DC environments.',
     tags:['Instruments','Recurring'], base:185 },
+  // ── Cooling & Thermal ──
+  { ticker:'TT', name:'Trane Technologies', cat:'Commercial HVAC / Data Center Cooling', tier:1, score:79, sector:'cooling', sentiment:'Buy',
+    dcPct:30, cycle:10, crit:4, lock:3, sup:4,
+    desc:'Trane Technologies — Commercial HVAC and data center cooling systems, 30%+ order growth in 2025',
+    tags:['Cooling Leader','Growing DC'], base:350 },
+  { ticker:'CARR', name:'Carrier Global', cat:'HVAC / Precision Cooling', tier:2, score:68, sector:'cooling', sentiment:'Hold/Outperform',
+    dcPct:20, cycle:12, crit:3, lock:2, sup:3,
+    desc:'Carrier Global — Legacy HVAC giant pivoting to high-margin precision data center cooling',
+    tags:['HVAC','DC Pivot'], base:75 },
+  { ticker:'JCI', name:'Johnson Controls', cat:'Building Systems / DC Cooling Modules', tier:2, score:75, sector:'cooling', sentiment:'Buy',
+    dcPct:20, cycle:12, crit:4, lock:3, sup:3,
+    desc:'Johnson Controls — Building systems and data center cooling modules via Silent-Aire',
+    tags:['Cooling','Silent-Aire'], base:68 },
+  { ticker:'FIX', name:'Comfort Systems USA', cat:'HVAC Installation / Data Center Focus', tier:1, score:86, sector:'cooling', sentiment:'Strong Buy',
+    dcPct:35, cycle:8, crit:4, lock:2, sup:4,
+    desc:'Comfort Systems USA — HVAC installation and maintenance, fastest-growing installer for data centers',
+    tags:['Recurring','Fastest Growing','DC Focus'], base:340 },
+  { ticker:'MOD', name:'Modine Manufacturing', cat:'Industrial Heat Exchangers / Closed-Loop Cooling', tier:2, score:76, sector:'cooling', sentiment:'Buy',
+    dcPct:40, cycle:10, crit:4, lock:3, sup:3,
+    desc:'Modine Manufacturing — Industrial heat exchangers and closed-loop water-efficient cooling systems',
+    tags:['Heat Exchange','Water Efficient'], base:95 },
+  { ticker:'SPXC', name:'SPX Technologies', cat:'HVAC Infrastructure / DC Cooling', tier:2, score:75, sector:'cooling', sentiment:'Buy',
+    dcPct:25, cycle:12, crit:3, lock:2, sup:3,
+    desc:'SPX Technologies — HVAC infrastructure equipment and emerging data center cooling play',
+    tags:['HVAC Infra','Emerging DC'], base:125 },
 ];
 
 const BRAND_MAP = {
@@ -213,6 +239,12 @@ function scoreColor(s){
   if(s>=75) return '#4d9fff';
   if(s>=65) return '#f0a500';
   return '#8b90a0';
+}
+function sentimentColor(s){
+  if(s==='Strong Buy') return 'var(--green)';
+  if(s==='Buy') return 'var(--accent)';
+  if(s==='Hold/Outperform') return 'var(--amber)';
+  return 'var(--text3)';
 }
 
 // ── ROOT APP ─────────────────────────────────────────────────────────────────
@@ -304,13 +336,14 @@ function InfraAlpha(){
       return `${c.ticker} | Score:${c.score} | ${c.cat} | DC Revenue:${c.dcPct}% | Replacement Cycle:${c.cycle}yr | Criticality:${c.crit}/5 | Price:${pStr} | Position:${c.position} | Field Observations:${c.obsCount}${c.notes?` | Frank's notes:"${c.notes}"`:''}`
     }).join('\n');
 
-    const systemPrompt=`You are the Infra Alpha intelligence layer — a specialized investment analyst focused on data center physical infrastructure investing.
+    const systemPrompt=`You are an investment intelligence assistant for Frank, a data center Senior Chief Engineer.
+Frank tracks both power infrastructure (VRT, ETN, SBGSY, ABB, CMI, NVT, ROK, CAT, ENS, HUBB, AMETEK) and cooling/thermal companies (TT, CARR, JCI, FIX, MOD, SPXC). He gains investment signals from his field work: what equipment he's replacing, brand switches, failure rates, and facility expansions. Current macro tailwind: McKinsey estimates $7T in AI data center capex through 2030.
 
 ABOUT THE USER:
-Frank is a Senior Chief Engineer at BP, managing a critical data center that processes Mercantile Exchange and BP transactions. He personally replaces batteries, UPS systems, PLC/control systems, and breakers in live Tier III/IV facilities on weekends. His field observations are pre-earnings intelligence — he sees component replacement cycles from the inside, weeks before it shows up in supplier revenue numbers.
+Frank is a Senior Chief Engineer at BP, managing a critical data center that processes Mercantile Exchange and BP transactions. He personally replaces batteries, UPS systems, PLC/control systems, breakers, and cooling infrastructure in live Tier III/IV facilities on weekends. His field observations are pre-earnings intelligence — he sees component replacement cycles from the inside, weeks before it shows up in supplier revenue numbers.
 
 CORE INVESTMENT THESIS:
-The data center maintenance layer is the "pick and shovel" play on AI infrastructure. Every 5–15 years, batteries get replaced, breakers get swapped, PLCs get upgraded, cooling gets overhauled. These are compliance-driven, uptime-critical, non-discretionary purchases with predictable cycles. The global data center infrastructure market is heading toward $1 trillion in annual spending by 2030, with $3 trillion committed through the decade.
+The data center maintenance layer is the "pick and shovel" play on AI infrastructure. Every 5–15 years, batteries get replaced, breakers get swapped, PLCs get upgraded, cooling gets overhauled. These are compliance-driven, uptime-critical, non-discretionary purchases with predictable cycles. McKinsey estimates $7T in AI data center capex through 2030.
 
 SCORING MODEL (Infra Alpha Score 0–100):
 - Replacement Frequency (25%): shorter cycles = more recurring revenue predictability
@@ -319,7 +352,7 @@ SCORING MODEL (Infra Alpha Score 0–100):
 - Vendor Lock-In (15%): proprietary software/connectors = pricing power
 - Supply Chain Position (15%): direct-to-operator relationships score best
 
-KEY COMPANIES (scored and ranked):
+POWER & ELECTRICAL UNIVERSE:
 VRT (94) — Vertiv Holdings: Pure-play. UPS, liquid cooling, thermal management. $15B backlog, 30%+ growth, just joined S&P 500.
 ETN (88) — Eaton Corporation: Breakers, UPS, switchgear. 70% DC order growth. Grid-to-chip narrative.
 SBGSY (87) — Schneider Electric: EcoStruxure platform. Deep software lock-in on top of hardware.
@@ -331,6 +364,14 @@ CAT (68) — Caterpillar: Generators. DC exposure growing.
 ENS (71) — EnerSys: Industrial batteries for DC UPS backup. Dominant in VRLA/lithium DC backup.
 ROK (66) — Rockwell Automation: PLCs, control systems. Strong lock-in, limited DC focus.
 HUBB (64) — Hubbell Inc: Wiring, electrical distribution. Steady compounder, in every DC build-out.
+
+COOLING & THERMAL UNIVERSE:
+TT (79) — Trane Technologies: Commercial HVAC and data center cooling systems. 30%+ order growth in 2025.
+FIX (86) — Comfort Systems USA: Fastest-growing HVAC installer, major data center focus. Strong Buy.
+MOD (76) — Modine Manufacturing: Industrial heat exchangers and closed-loop water-efficient cooling.
+JCI (75) — Johnson Controls: Building systems and DC cooling modules via Silent-Aire acquisition.
+SPXC (75) — SPX Technologies: HVAC infrastructure equipment and emerging data center cooling play.
+CARR (68) — Carrier Global: Legacy HVAC giant pivoting to high-margin precision data center cooling.
 
 FRANK'S FIELD OBSERVATIONS (most recent first, these are the core signal):
 ${obsCtx}
@@ -499,25 +540,42 @@ function Dashboard({companies,observations,prices,setTab}){
             )
           ),
           React.createElement('tbody',null,
-            companies.map(c=>{
-              const p=prices[c.ticker]; const sig=getSignal(c.score);
-              return React.createElement('tr',{key:c.ticker},
-                React.createElement('td',{style:{fontFamily:'var(--mono)',color:'var(--accent)',fontSize:12}},c.ticker),
-                React.createElement('td',{style:{fontWeight:500,color:'#fff'}},c.name),
-                React.createElement('td',{style:{fontFamily:'var(--mono)',color:scoreColor(c.score),fontWeight:700}},c.score),
-                React.createElement('td',null,
-                  React.createElement('span',{style:{fontFamily:'var(--mono)',fontSize:10,color:sig.color,background:sig.color+'18',padding:'2px 7px',borderRadius:2}},sig.label)
-                ),
-                React.createElement('td',{style:{fontFamily:'var(--mono)',color:p?'#fff':'var(--text3)'}},p?'$'+p.price?.toFixed(2):'—'),
-                React.createElement('td',{style:{fontFamily:'var(--mono)',color:p?.changePct>=0?'var(--green)':'var(--coral)'}},
-                  p?.changePct!=null?(p.changePct>=0?'+':'')+p.changePct?.toFixed(2)+'%':'—'
-                ),
-                React.createElement('td',{style:{color:'var(--text2)'}},c.dcPct+'%'),
-                React.createElement('td',{style:{color:'var(--text2)'}},c.cycle+'yr'),
-                React.createElement('td',{style:{fontFamily:'var(--mono)',color:c.obsCount>0?'var(--green)':'var(--text3)',fontWeight:c.obsCount>0?700:400}},c.obsCount||'0'),
-                React.createElement('td',{style:{fontFamily:'var(--mono)',fontSize:10,color:'var(--text3)',textTransform:'uppercase'}},c.position)
+            (()=>{
+              const powerCos=companies.filter(c=>c.sector==='power'||!c.sector);
+              const coolingCos=companies.filter(c=>c.sector==='cooling');
+              const sectorHeader=(label,color)=>React.createElement('tr',{key:'hdr-'+label},
+                React.createElement('td',{colSpan:10,style:{
+                  fontFamily:'var(--mono)',fontSize:9,letterSpacing:'0.12em',textTransform:'uppercase',
+                  color:color,background:'rgba(255,255,255,0.03)',padding:'5px 10px',
+                  borderBottom:'1px solid var(--border)',borderTop:'1px solid var(--border)'
+                }},'— '+label+' —')
               );
-            })
+              const compRow=c=>{
+                const p=prices[c.ticker]; const sig=getSignal(c.score);
+                return React.createElement('tr',{key:c.ticker},
+                  React.createElement('td',{style:{fontFamily:'var(--mono)',color:'var(--accent)',fontSize:12}},c.ticker),
+                  React.createElement('td',{style:{fontWeight:500,color:'#fff'}},c.name),
+                  React.createElement('td',{style:{fontFamily:'var(--mono)',color:scoreColor(c.score),fontWeight:700}},c.score),
+                  React.createElement('td',null,
+                    React.createElement('span',{style:{fontFamily:'var(--mono)',fontSize:10,color:sig.color,background:sig.color+'18',padding:'2px 7px',borderRadius:2}},sig.label)
+                  ),
+                  React.createElement('td',{style:{fontFamily:'var(--mono)',color:p?'#fff':'var(--text3)'}},p?'$'+p.price?.toFixed(2):'—'),
+                  React.createElement('td',{style:{fontFamily:'var(--mono)',color:p?.changePct>=0?'var(--green)':'var(--coral)'}},
+                    p?.changePct!=null?(p.changePct>=0?'+':'')+p.changePct?.toFixed(2)+'%':'—'
+                  ),
+                  React.createElement('td',{style:{color:'var(--text2)'}},c.dcPct+'%'),
+                  React.createElement('td',{style:{color:'var(--text2)'}},c.cycle+'yr'),
+                  React.createElement('td',{style:{fontFamily:'var(--mono)',color:c.obsCount>0?'var(--green)':'var(--text3)',fontWeight:c.obsCount>0?700:400}},c.obsCount||'0'),
+                  React.createElement('td',{style:{fontFamily:'var(--mono)',fontSize:10,color:'var(--text3)',textTransform:'uppercase'}},c.position)
+                );
+              };
+              return [
+                sectorHeader('Power & Electrical','var(--amber)'),
+                ...powerCos.map(compRow),
+                sectorHeader('Cooling & Thermal','var(--accent)'),
+                ...coolingCos.map(compRow),
+              ];
+            })()
           )
         )
       )
@@ -635,12 +693,14 @@ function Watchlist({companies,prices,updateCompany,setTab,setChatInput}){
   const filtered=filter==='all'?companies:
     filter==='tier1'?companies.filter(c=>c.tier===1):
     filter==='tier2'?companies.filter(c=>c.tier===2):
+    filter==='power'?companies.filter(c=>c.sector==='power'||!c.sector):
+    filter==='cooling'?companies.filter(c=>c.sector==='cooling'):
     companies.filter(c=>c.position===filter);
 
   return React.createElement('div',null,
     React.createElement('div',{style:{display:'flex',gap:8,marginBottom:16,flexWrap:'wrap',alignItems:'center'}},
       React.createElement('div',{className:'section-head',style:{marginBottom:0,marginRight:8}},'Company Intelligence'),
-      [['all','All'],['tier1','Tier 1'],['tier2','Tier 2'],['invested','Invested'],['accumulating','Accumulating']].map(([v,l])=>
+      [['all','All'],['power','Power'],['cooling','Cooling'],['tier1','Tier 1'],['tier2','Tier 2'],['invested','Invested'],['accumulating','Accumulating']].map(([v,l])=>
         React.createElement('button',{key:v,className:'btn btn-ghost btn-sm',
           style:{borderColor:filter===v?'var(--accent)':'',color:filter===v?'var(--accent)':''},
           onClick:()=>setFilter(v)},l)
@@ -652,9 +712,14 @@ function Watchlist({companies,prices,updateCompany,setTab,setChatInput}){
         return React.createElement('div',{key:c.ticker,className:'company-card'},
           React.createElement('div',{style:{display:'flex',justifyContent:'space-between',alignItems:'flex-start',marginBottom:8}},
             React.createElement('div',null,
-              React.createElement('div',{style:{display:'flex',gap:6,alignItems:'center',marginBottom:5}},
+              React.createElement('div',{style:{display:'flex',gap:6,alignItems:'center',marginBottom:5,flexWrap:'wrap'}},
                 React.createElement('span',{className:'company-card ticker'},c.ticker),
-                React.createElement('span',{className:'tier-badge t'+c.tier},'Tier '+c.tier)
+                React.createElement('span',{className:'tier-badge t'+c.tier},'Tier '+c.tier),
+                c.sentiment&&React.createElement('span',{style:{
+                  fontFamily:'var(--mono)',fontSize:9,padding:'1px 6px',borderRadius:2,
+                  background:sentimentColor(c.sentiment)+'18',color:sentimentColor(c.sentiment),
+                  border:'1px solid '+sentimentColor(c.sentiment)+'44',textTransform:'uppercase',letterSpacing:'0.06em'
+                }},c.sentiment)
               ),
               React.createElement('div',{className:'name'},c.name),
               React.createElement('div',{className:'cat'},c.cat)
