@@ -1,7 +1,87 @@
 import { useState, useEffect } from 'react'
-import { Users, MessageSquare, GitBranch, Database, Activity, Brain, Box, FileText, Radio, Shield, RefreshCw, ExternalLink, Check } from 'lucide-react'
+import { Users, MessageSquare, GitBranch, Database, Activity, Brain, Box, FileText, Radio, Shield, RefreshCw, ExternalLink, Check, TrendingUp, TrendingDown, Minus } from 'lucide-react'
 import { API_BASE_URL } from '../config'
 import { getAuthToken } from '../utils/auth'
+
+// --- Watchlist ---
+interface TickerData {
+  symbol: string
+  price: number | null
+  change: number | null
+  changePct: number | null
+  loading: boolean
+  error: boolean
+}
+
+const WATCHLIST_SYMBOLS = ['IONQ', 'AMD', 'UEC', 'BNS']
+
+function useLiveQuotes(symbols: string[]) {
+  const [tickers, setTickers] = useState<TickerData[]>(
+    symbols.map(s => ({ symbol: s, price: null, change: null, changePct: null, loading: true, error: false }))
+  )
+
+  useEffect(() => {
+    const fetchQuotes = async () => {
+      const results = await Promise.all(
+        symbols.map(async (sym) => {
+          try {
+            const res = await fetch(
+              `https://query1.finance.yahoo.com/v8/finance/chart/${sym}?interval=1d&range=1d`,
+              { headers: { 'Accept': 'application/json' } }
+            )
+            if (!res.ok) throw new Error('fetch failed')
+            const json = await res.json()
+            const meta = json?.chart?.result?.[0]?.meta
+            const price = meta?.regularMarketPrice ?? null
+            const prev = meta?.chartPreviousClose ?? meta?.previousClose ?? null
+            const change = price != null && prev != null ? price - prev : null
+            const changePct = change != null && prev ? (change / prev) * 100 : null
+            return { symbol: sym, price, change, changePct, loading: false, error: false }
+          } catch {
+            return { symbol: sym, price: null, change: null, changePct: null, loading: false, error: true }
+          }
+        })
+      )
+      setTickers(results)
+    }
+
+    fetchQuotes()
+    const interval = setInterval(fetchQuotes, 60000) // refresh every 60s
+    return () => clearInterval(interval)
+  }, [])
+
+  return tickers
+}
+
+function TickerCard({ t }: { t: TickerData }) {
+  const up = t.changePct != null && t.changePct > 0
+  const down = t.changePct != null && t.changePct < 0
+  const color = up ? 'text-emerald-400' : down ? 'text-red-400' : 'text-gray-400'
+  const bgColor = up ? 'bg-emerald-400/5 border-emerald-400/20' : down ? 'bg-red-400/5 border-red-400/20' : 'bg-card border-border'
+
+  return (
+    <div className={`rounded-xl border p-4 ${bgColor}`}>
+      <div className="flex items-center justify-between mb-2">
+        <span className="text-sm font-bold text-white">{t.symbol}</span>
+        {up ? <TrendingUp size={14} className="text-emerald-400" /> : down ? <TrendingDown size={14} className="text-red-400" /> : <Minus size={14} className="text-gray-500" />}
+      </div>
+      {t.loading ? (
+        <div className="text-gray-600 text-xs animate-pulse">Loading…</div>
+      ) : t.error ? (
+        <div className="text-gray-600 text-xs">Unavailable</div>
+      ) : (
+        <>
+          <div className="text-xl font-bold text-white">${t.price?.toFixed(2) ?? '—'}</div>
+          <div className={`text-xs font-medium mt-1 ${color}`}>
+            {t.change != null ? `${t.change >= 0 ? '+' : ''}${t.change.toFixed(2)}` : '—'}
+            {' '}
+            ({t.changePct != null ? `${t.changePct >= 0 ? '+' : ''}${t.changePct.toFixed(2)}%` : '—'})
+          </div>
+        </>
+      )}
+    </div>
+  )
+}
 
 interface ConvexEvent {
   id: string
@@ -53,6 +133,7 @@ export default function InfraAlpha() {
   const [loading, setLoading] = useState(true)
   const [lastRefresh, setLastRefresh] = useState(new Date())
   const [frankContext, setFrankContext] = useState<Record<string, string>>({})
+  const tickers = useLiveQuotes(WATCHLIST_SYMBOLS)
 
   const fetchData = async () => {
     setLoading(true)
@@ -121,6 +202,18 @@ export default function InfraAlpha() {
             <div className={`text-2xl font-bold ${s.color}`}>{s.value}</div>
           </div>
         ))}
+      </div>
+
+      {/* Watchlist */}
+      <div className="bg-card border border-border rounded-xl p-5">
+        <div className="flex items-center gap-2 mb-4">
+          <TrendingUp size={16} className="text-emerald-400" />
+          <h2 className="text-sm font-semibold">Frank's Watchlist</h2>
+          <span className="text-[10px] text-gray-600 ml-auto">Live · refreshes every 60s</span>
+        </div>
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+          {tickers.map(t => <TickerCard key={t.symbol} t={t} />)}
+        </div>
       </div>
 
       {/* Main Grid */}
