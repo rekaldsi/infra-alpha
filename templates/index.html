@@ -429,7 +429,10 @@
     <div class="section-header">
       <span>📐</span>
       <span class="section-title">VWAP Bounce Setups</span>
-      <span class="section-meta" id="vwap-meta">Frank's Strategy — refreshes every 5min &nbsp;<a onclick="openVwapGuide()" style="color:#6366f1;cursor:pointer;font-size:11px;text-decoration:underline;text-underline-offset:3px">What is this? →</a></span>
+      <div style="display:flex;align-items:center;gap:10px;margin-left:auto">
+        <span class="section-meta" id="vwap-meta" style="margin-left:0">Frank's Strategy — refreshes every 5min</span>
+        <button onclick="openVwapGuide()" style="background:rgba(99,102,241,0.12);border:1px solid rgba(99,102,241,0.3);color:#6366f1;font-size:11px;font-weight:600;padding:4px 10px;border-radius:6px;cursor:pointer;white-space:nowrap">📖 How to use this</button>
+      </div>
     </div>
     <div class="vwap-grid" id="vwap-grid">
       <div class="vwap-empty">Scanning watchlist for VWAP setups…</div>
