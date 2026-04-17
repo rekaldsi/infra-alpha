@@ -159,48 +159,99 @@ def fetch_quote(symbol: str) -> dict:
 
 
 def fetch_vwap_setup(symbol: str) -> dict:
+    """OPTIMIZED VWAP scanner for maximum profit-taking edge.
+    Parameters tuned for high-conviction setups with tight risk/reward.
+    """
     now = time.time()
     if symbol in _vwap_cache and now - _vwap_cache[symbol].get("_ts", 0) < VWAP_TTL:
         return _vwap_cache[symbol]
     try:
         import yfinance as yf
         df = yf.Ticker(symbol).history(period="1d", interval="5m")
-        if df is None or len(df) < 10:
+        if df is None or len(df) < 20:
             return {"symbol": symbol, "setup": False, "grade": "NONE", "_ts": now}
         typical = (df["High"] + df["Low"] + df["Close"]) / 3
         vwap    = (typical * df["Volume"]).cumsum() / df["Volume"].cumsum()
+        
         last_close = float(df["Close"].iloc[-1])
         last_vwap  = float(vwap.iloc[-1])
         last_open  = float(df["Open"].iloc[-1])
+        last_high  = float(df["High"].iloc[-1])
+        last_low   = float(df["Low"].iloc[-1])
         last_vol   = float(df["Volume"].iloc[-1])
-        avg_vol    = float(df["Volume"].iloc[-20:].mean()) if len(df) >= 20 else float(df["Volume"].mean())
+        prev_close = float(df["Close"].iloc[-2])
+        
+        # Volume baseline: 30-bar average for longer-term context
+        avg_vol    = float(df["Volume"].iloc[-30:].mean()) if len(df) >= 30 else float(df["Volume"].mean())
+        
+        # ── REJECTION FILTERS ──────────────────────────────────────────
+        # Must be above VWAP for a valid long setup
         if last_close <= last_vwap:
             result = {"symbol": symbol, "setup": False, "grade": "NONE",
                       "vwap": round(last_vwap, 2), "price": round(last_close, 2),
                       "reason": "price below VWAP", "_ts": now}
             _vwap_cache[symbol] = result
             return result
-        recent_lows  = list(df["Low"].iloc[-4:-1])
-        recent_vwaps = [float(vwap.iloc[-(4 - i)]) for i in range(len(recent_lows))]
-        touched = any(abs(low - v) / v < 0.003 for low, v in zip(recent_lows, recent_vwaps))
-        if not touched or last_close <= last_open:
+        
+        # Must close above open (bullish rejection candle)
+        if last_close <= last_open:
             result = {"symbol": symbol, "setup": False, "grade": "NONE",
                       "vwap": round(last_vwap, 2), "price": round(last_close, 2),
-                      "reason": "no pullback/rejection", "_ts": now}
+                      "reason": "bearish candle", "_ts": now}
             _vwap_cache[symbol] = result
             return result
+        
+        # ── PULLBACK DETECTION (optimized lookback) ──────────────────────
+        # Look back 25 minutes (5 x 5min candles) for VWAP touch
+        # Tolerance: 0.5% (realistic price action, not too tight)
+        recent_lows  = list(df["Low"].iloc[-5:-1])  # Last 4 candles before current
+        recent_vwaps = [float(vwap.iloc[-(5 - i)]) for i in range(len(recent_lows))]
+        vwap_touch_tolerance = 0.005  # 0.5% tolerance
+        touched = any(abs(low - v) / v < vwap_touch_tolerance for low, v in zip(recent_lows, recent_vwaps))
+        
+        if not touched:
+            result = {"symbol": symbol, "setup": False, "grade": "NONE",
+                      "vwap": round(last_vwap, 2), "price": round(last_close, 2),
+                      "reason": "no recent VWAP touch", "_ts": now}
+            _vwap_cache[symbol] = result
+            return result
+        
+        # ── VOLUME CONFIRMATION ───────────────────────────────────────────
+        # Minimum 2.0x baseline to filter noise, 2.5x for HIGH grade
         vol_spike = last_vol / avg_vol if avg_vol > 0 else 0
-        if vol_spike < 1.5:
+        if vol_spike < 2.0:
             result = {"symbol": symbol, "setup": False, "grade": "NONE",
                       "vwap": round(last_vwap, 2), "price": round(last_close, 2),
-                      "reason": f"volume too low ({vol_spike:.1f}x)", "_ts": now}
+                      "reason": f"volume insufficient ({vol_spike:.1f}x baseline)", "_ts": now}
             _vwap_cache[symbol] = result
             return result
-        grade = "HIGH" if vol_spike >= 3.0 else "MEDIUM"
+        
+        # ── GRADE ASSIGNMENT ──────────────────────────────────────────────
+        # HIGH: 2.5x+ volume, Medium: 2.0-2.5x
+        grade = "HIGH" if vol_spike >= 2.5 else "MEDIUM"
+        
+        # ── RISK/REWARD METRICS ───────────────────────────────────────────
         pct_above = round(((last_close - last_vwap) / last_vwap) * 100, 2)
-        result = {"symbol": symbol, "setup": True, "grade": grade,
-                  "price": round(last_close, 2), "vwap": round(last_vwap, 2),
-                  "pct_above_vwap": pct_above, "vol_spike": round(vol_spike, 1), "_ts": now}
+        stop_dist = round(abs(last_close - last_low) / last_close * 100, 2)  # Stop below candle low
+        target_1r = round(last_close + (last_close - last_low), 2)  # 1:1 R/R
+        target_15r = round(last_close + (last_close - last_low) * 1.5, 2)  # 1.5:1 R/R
+        target_2r = round(last_close + (last_close - last_low) * 2.0, 2)  # 2:1 R/R
+        
+        result = {
+            "symbol": symbol,
+            "setup": True,
+            "grade": grade,
+            "price": round(last_close, 2),
+            "vwap": round(last_vwap, 2),
+            "pct_above_vwap": pct_above,
+            "vol_spike": round(vol_spike, 1),
+            "stop_below": round(last_low, 2),
+            "stop_pct": stop_dist,
+            "target_1r": target_1r,
+            "target_15r": target_15r,
+            "target_2r": target_2r,
+            "_ts": now
+        }
         _vwap_cache[symbol] = result
         return result
     except Exception as e:

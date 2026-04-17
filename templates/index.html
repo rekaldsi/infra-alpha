@@ -352,12 +352,84 @@
     <div class="bias-pill bias-balanced" id="m-bias">Loading…</div>
   </div>
 
+  <!-- VWAP GUIDE MODAL -->
+  <div id="vwap-modal" style="display:none;position:fixed;inset:0;z-index:999;background:rgba(0,0,0,0.85);backdrop-filter:blur(6px);overflow-y:auto;padding:40px 20px" onclick="if(event.target===this)closeVwapGuide()">
+    <div style="max-width:680px;margin:0 auto;background:#111;border:1px solid #2a2a2a;border-radius:16px;padding:36px;position:relative">
+      <button onclick="closeVwapGuide()" style="position:absolute;top:16px;right:16px;background:none;border:none;color:#888;font-size:20px;cursor:pointer;line-height:1">✕</button>
+      <h2 style="font-size:18px;font-weight:700;margin-bottom:6px">📐 VWAP Bounce Setups — How It Works</h2>
+      <p style="color:#888;font-size:12px;margin-bottom:24px">Frank's strategy, explained from scratch</p>
+
+      <h3 style="font-size:13px;font-weight:700;color:#6366f1;margin-bottom:8px">What is VWAP?</h3>
+      <p style="font-size:13px;color:#ccc;line-height:1.7;margin-bottom:18px">
+        VWAP stands for <strong>Volume Weighted Average Price</strong>. It's the average price a stock has traded at throughout the day, weighted by how much volume traded at each price. Institutions — banks, hedge funds, big money — use VWAP as their benchmark. They buy below it and sell above it. That's why it acts as a magnet.<br><br>
+        Think of VWAP as the "fair value" line for the day. Above it = bulls in control. Below it = bears in control.
+      </p>
+
+      <h3 style="font-size:13px;font-weight:700;color:#6366f1;margin-bottom:8px">What is a VWAP Bounce Setup?</h3>
+      <p style="font-size:13px;color:#ccc;line-height:1.7;margin-bottom:18px">
+        A VWAP bounce happens when a stock:
+      </p>
+      <ol style="font-size:13px;color:#ccc;line-height:2;margin-bottom:18px;padding-left:20px">
+        <li>Is <strong>trading above VWAP</strong> (uptrend, bullish bias)</li>
+        <li><strong>Pulls back</strong> toward VWAP (sellers take profit, price dips)</li>
+        <li><strong>Touches or comes close</strong> to VWAP and holds (buyers defend the level)</li>
+        <li><strong>Bounces back up</strong> with a surge in volume (confirmation that buyers are back)</li>
+      </ol>
+      <p style="font-size:13px;color:#ccc;line-height:1.7;margin-bottom:18px">
+        That bounce is your entry signal. You're buying where the institutions are buying, with a clear line in the sand for your stop.
+      </p>
+
+      <h3 style="font-size:13px;font-weight:700;color:#22c55e;margin-bottom:8px">🔥 HIGH vs ⚡ MEDIUM — What the Grades Mean</h3>
+      <div style="background:#0a0a0a;border-radius:10px;padding:16px;margin-bottom:18px">
+        <p style="font-size:13px;color:#ccc;line-height:1.7;margin-bottom:10px">
+          <span style="color:#22c55e;font-weight:700">🔥 HIGH</span> — Volume spike is <strong>3x or more</strong> above average. Strong institutional buying. Highest conviction entry. Act fast — these don't last long.
+        </p>
+        <p style="font-size:13px;color:#ccc;line-height:1.7;margin:0">
+          <span style="color:#eab308;font-weight:700">⚡ MEDIUM</span> — Volume spike is <strong>1.5x–3x</strong> above average. Setup is valid but less explosive. Still worth taking, just size accordingly.
+        </p>
+      </div>
+
+      <h3 style="font-size:13px;font-weight:700;color:#6366f1;margin-bottom:8px">How to Trade It — Step by Step</h3>
+      <ol style="font-size:13px;color:#ccc;line-height:2.1;margin-bottom:18px;padding-left:20px">
+        <li><strong>Wait for the setup to appear</strong> in the scanner (🔥 or ⚡ badge on the card)</li>
+        <li><strong>Click the stock card</strong> → opens TradingView. Switch to 5-minute candles.</li>
+        <li><strong>Confirm visually:</strong> price pulled back near VWAP, then bounced with a strong green candle and volume bar</li>
+        <li><strong>Enter on the bounce candle's close</strong> — don't chase if it's already run 2–3% from VWAP</li>
+        <li><strong>Set your stop</strong> just below VWAP (if it loses VWAP and can't reclaim in 1–2 candles, the setup failed)</li>
+        <li><strong>Target:</strong> previous high of day, or scale out in thirds as it moves in your favor</li>
+      </ol>
+
+      <h3 style="font-size:13px;font-weight:700;color:#ef4444;margin-bottom:8px">Common Mistakes to Avoid</h3>
+      <ul style="font-size:13px;color:#ccc;line-height:2;margin-bottom:18px;padding-left:20px">
+        <li><strong>Chasing after a big move</strong> — if price is already 4%+ above VWAP, you missed the setup. Wait for the next pullback.</li>
+        <li><strong>Ignoring volume</strong> — a bounce without volume is weak. Institutions aren't buying. Skip it.</li>
+        <li><strong>Not having a stop</strong> — VWAP is your line. Below it = exit. No exceptions.</li>
+        <li><strong>Trading against the market</strong> — check the macro bar. If SPY is red and VIX is spiking, VWAP setups fail more often. Sit on hands.</li>
+      </ul>
+
+      <h3 style="font-size:13px;font-weight:700;color:#6366f1;margin-bottom:8px">Best Conditions for This Strategy</h3>
+      <ul style="font-size:13px;color:#ccc;line-height:2;margin-bottom:24px;padding-left:20px">
+        <li>SPY is green or flat (bullish macro backdrop)</li>
+        <li>VIX below 22 (low fear = cleaner moves)</li>
+        <li>Stock has a catalyst or sector tailwind (e.g. earnings beat, sector rotation into AI infra)</li>
+        <li>Setup fires between <strong>9:45–11:30 AM</strong> or <strong>1:30–3:00 PM</strong> CST (highest institutional activity)</li>
+        <li>First VWAP test of the day is usually the strongest</li>
+      </ul>
+
+      <div style="background:rgba(99,102,241,0.08);border:1px solid rgba(99,102,241,0.2);border-radius:10px;padding:16px">
+        <p style="font-size:12px;color:#aaa;line-height:1.7;margin:0">
+          ⚠️ <strong style="color:#e8e8e8">Not financial advice.</strong> VWAP bounce setups are a momentum strategy with real risk. Always use a stop loss. Never risk more than you're comfortable losing on a single trade. Past setups don't guarantee future results.
+        </p>
+      </div>
+    </div>
+  </div>
+
   <!-- VWAP SCAN -->
   <div class="section">
     <div class="section-header">
       <span>📐</span>
       <span class="section-title">VWAP Bounce Setups</span>
-      <span class="section-meta" id="vwap-meta">Frank's Strategy — refreshes every 5min</span>
+      <span class="section-meta" id="vwap-meta">Frank's Strategy — refreshes every 5min &nbsp;<a onclick="openVwapGuide()" style="color:#6366f1;cursor:pointer;font-size:11px;text-decoration:underline;text-underline-offset:3px">What is this? →</a></span>
     </div>
     <div class="vwap-grid" id="vwap-grid">
       <div class="vwap-empty">Scanning watchlist for VWAP setups…</div>
@@ -447,6 +519,17 @@
   updateClock()
 
   // ── Helpers ───────────────────────────────────────────────────────────────
+  // ── VWAP Guide Modal ──────────────────────────────────────────────────────
+  function openVwapGuide() {
+    document.getElementById('vwap-modal').style.display = 'block'
+    document.body.style.overflow = 'hidden'
+  }
+  function closeVwapGuide() {
+    document.getElementById('vwap-modal').style.display = 'none'
+    document.body.style.overflow = ''
+  }
+  document.addEventListener('keydown', e => { if (e.key === 'Escape') closeVwapGuide() })
+
   function fmtPct(v) {
     if (v == null) return '—'
     const s = v >= 0 ? '+' : ''
