@@ -106,10 +106,28 @@
     .bias-cash { background: rgba(239,68,68,0.1); color: var(--red); border: 1px solid rgba(239,68,68,0.3); }
 
     /* ── Sections ── */
-    .section { margin-top: 24px; }
+    .section { margin-top: 28px; }
     .section-header {
       display: flex; align-items: center; gap: 8px;
       margin-bottom: 14px;
+      padding: 10px 14px;
+      border-radius: 10px;
+    }
+    .section-header.vwap-header {
+      background: rgba(249,115,22,0.06);
+      border-left: 3px solid var(--orange);
+    }
+    .section-header.watchlist-header {
+      background: rgba(99,102,241,0.06);
+      border-left: 3px solid var(--accent);
+    }
+    .section-header.signals-header {
+      background: rgba(59,130,246,0.06);
+      border-left: 3px solid var(--blue);
+    }
+    .section-header.add-header {
+      background: rgba(34,197,94,0.05);
+      border-left: 3px solid var(--green);
     }
     .section-title { font-size: 13px; font-weight: 600; color: var(--text); }
     .section-meta { font-size: 11px; color: var(--muted); margin-left: auto; }
@@ -121,15 +139,15 @@
       gap: 12px;
     }
     .vwap-card {
-      background: var(--card);
-      border: 1px solid var(--border);
+      background: rgba(249,115,22,0.03);
+      border: 1px solid rgba(249,115,22,0.15);
       border-radius: 12px;
       padding: 14px 16px;
-      transition: border-color 0.15s;
+      transition: border-color 0.15s, box-shadow 0.15s;
     }
-    .vwap-card:hover { border-color: var(--border2); }
-    .vwap-card.grade-high { border-color: rgba(34,197,94,0.35); background: rgba(34,197,94,0.04); }
-    .vwap-card.grade-medium { border-color: rgba(234,179,8,0.3); background: rgba(234,179,8,0.03); }
+    .vwap-card:hover { border-color: rgba(249,115,22,0.4); box-shadow: 0 4px 16px rgba(249,115,22,0.1); cursor: pointer; }
+    .vwap-card.grade-high { border-color: rgba(249,115,22,0.45); background: rgba(249,115,22,0.06); }
+    .vwap-card.grade-medium { border-color: rgba(249,115,22,0.25); background: rgba(249,115,22,0.03); }
     .vwap-card-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px; }
     .vwap-symbol { font-size: 16px; font-weight: 700; }
     .grade-badge {
@@ -426,12 +444,12 @@
 
   <!-- VWAP SCAN -->
   <div class="section">
-    <div class="section-header">
+    <div class="section-header vwap-header">
       <span>📐</span>
       <span class="section-title">VWAP Bounce Setups</span>
       <div style="display:flex;align-items:center;gap:10px;margin-left:auto">
         <span class="section-meta" id="vwap-meta" style="margin-left:0">Frank's Strategy — refreshes every 5min</span>
-        <button onclick="openVwapGuide()" style="background:rgba(99,102,241,0.12);border:1px solid rgba(99,102,241,0.3);color:#6366f1;font-size:11px;font-weight:600;padding:4px 10px;border-radius:6px;cursor:pointer;white-space:nowrap">📖 How to use this</button>
+        <button onclick="openVwapGuide()" style="background:rgba(249,115,22,0.12);border:1px solid rgba(249,115,22,0.3);color:#f97316;font-size:11px;font-weight:600;padding:4px 10px;border-radius:6px;cursor:pointer;white-space:nowrap">📖 How to use this</button>
       </div>
     </div>
     <div class="vwap-grid" id="vwap-grid">
@@ -441,7 +459,7 @@
 
   <!-- WATCHLIST -->
   <div class="section">
-    <div class="section-header">
+    <div class="section-header watchlist-header">
       <span>📈</span>
       <span class="section-title">Frank's Watchlist — Data Center Infra</span>
       <span class="section-meta" id="wl-meta">T1=Core · T2=Strong · T3=REIT · T4=Watch · Refreshes every 60s</span>
@@ -453,7 +471,7 @@
 
   <!-- ADD STOCK -->
   <div class="section">
-    <div class="section-header">
+    <div class="section-header add-header">
       <span>➕</span>
       <span class="section-title">Add / Remove Stocks</span>
       <span class="section-meta">Changes are instant — Frank or Jerry can edit the watchlist directly here</span>
@@ -486,7 +504,7 @@
 
   <!-- SIGNALS FEED -->
   <div class="section">
-    <div class="section-header">
+    <div class="section-header signals-header">
       <span>📡</span>
       <span class="section-title">Activity Feed</span>
       <span class="section-meta">All watchlist events + bot signals</span>
