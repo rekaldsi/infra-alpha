@@ -60,7 +60,7 @@ STARTER_WATCHLIST = [
     {"symbol":"CMI",   "added_by":"Frank",  "notes":"TIER 1 — Cummins. #1 EBITDA 22%+, order book locked to 2028. Boring and dominant."},
     {"symbol":"ETN",   "added_by":"Frank",  "notes":"TIER 1 — Eaton. Power mgmt + liquid cooling (Boyd acquisition). Infrastructure backbone."},
     {"symbol":"MOD",   "added_by":"Frank",  "notes":"TIER 1 — Modine. Small cap, pure thermal mgmt for DC. Higher R/R vs ETN/VRT."},
-    {"symbol":"ABB",   "added_by":"Frank",  "notes":"TIER 1 — ABB Ltd. Electrification & automation. Deep data center exposure."},
+    {"symbol":"ABBNY", "added_by":"Frank",  "notes":"TIER 1 — ABB Ltd ADR (ABBNY). Electrification & automation. Deep data center exposure. US-tradeable ADR."},
     {"symbol":"TT",    "added_by":"Frank",  "notes":"TIER 1 — Trane Technologies. HVAC/cooling. $7.8B backlog, 120%+ applied bookings."},
     {"symbol":"NVT",   "added_by":"Frank",  "notes":"TIER 1 — nVent Electric. Enclosures, thermal mgmt, electrical infra for DC."},
     # TIER 2 — Strong but diluted
@@ -70,7 +70,7 @@ STARTER_WATCHLIST = [
     {"symbol":"JCI",   "added_by":"Frank",  "notes":"TIER 2 — Johnson Controls. Building automation, HVAC, fire/security. Solid."},
     {"symbol":"FIX",   "added_by":"Frank",  "notes":"TIER 2 — Comfort Systems. Under radar mech/electrical contractor. Heavy DC buildout."},
     {"symbol":"SBGSF", "added_by":"Frank",  "notes":"TIER 2 — Schneider Electric. Energy mgmt. Global DC standard. OTC, watch liquidity."},
-    {"symbol":"SIE",   "added_by":"Frank",  "notes":"TIER 2 — Siemens AG. Building automation, industrial, energy. OTC liquidity friction."},
+    {"symbol":"SIEGY", "added_by":"Frank",  "notes":"TIER 2 — Siemens AG ADR (SIEGY). Building automation, industrial, energy. US-tradeable ADR of SIE.DE."},
     {"symbol":"ATLKY", "added_by":"Frank",  "notes":"TIER 2 — Atlas Copco. Compressors, vacuum tech, power gen. OTC."},
     {"symbol":"FTV",   "added_by":"Frank",  "notes":"TIER 2 — Fortive. Industrial tech, sensors, facility instrumentation."},
     {"symbol":"APG",   "added_by":"Frank",  "notes":"TIER 2 — API Group. Fire protection, safety, HVAC services."},
@@ -85,7 +85,7 @@ STARTER_WATCHLIST = [
     {"symbol":"SNDK",  "added_by":"Frank",  "notes":"TIER 4 — SanDisk. Post-WD spinoff. Still forming. Watch."},
     # Frank's Portfolio
     {"symbol":"COIN",  "added_by":"Frank",  "notes":"Frank's Portfolio — Coinbase. Crypto exchange."},
-    {"symbol":"ABBNY", "added_by":"Frank",  "notes":"Frank's Portfolio — ABB ADR. Electrification & automation."},
+    # ABBNY already listed under TIER 1 above
     {"symbol":"UROY",  "added_by":"Frank",  "notes":"Frank's Portfolio — Uranium Royalty Corp. Nuclear energy."},
     {"symbol":"BP",    "added_by":"Frank",  "notes":"Frank's Portfolio — BP plc. Oil major. Energy macro hedge."},
     {"symbol":"ANET",  "added_by":"Frank",  "notes":"Frank's Portfolio — Arista Networks. AI networking infra."},
