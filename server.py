@@ -83,6 +83,13 @@ STARTER_WATCHLIST = [
     {"symbol": "AMD",   "added_by": "Frank", "notes": "Frank's Portfolio — Advanced Micro Devices. AI chips, GPU compute. DC infrastructure.", "active": True},
     {"symbol": "ET",    "added_by": "Frank", "notes": "Frank's Portfolio — Energy Transfer LP. Midstream energy. Pipeline infrastructure.", "active": True},
     {"symbol": "NVDA",  "added_by": "Frank", "notes": "Frank's Portfolio — NVIDIA. AI chips, GPU compute. DC infrastructure bellwether.", "active": True},
+    # FRANK'S PORTFOLIO — Screenshot 3 (2026-04-17)
+    {"symbol": "ONDS",  "added_by": "Frank", "notes": "Frank's Portfolio — Ondas Holdings. Autonomous drone/rail tech. Defense + infra.", "active": True},
+    {"symbol": "RNMBY", "added_by": "Frank", "notes": "Frank's Portfolio — Rheinmetall AG ADR. German defense/auto. NATO spending tailwind.", "active": True},
+    {"symbol": "GLD",   "added_by": "Frank", "notes": "Frank's Portfolio — SPDR Gold Trust. Gold hedge. Macro uncertainty play.", "active": True},
+    {"symbol": "UEC",   "added_by": "Frank", "notes": "Frank's Portfolio — Uranium Energy Corp. Physical uranium, US-focused. Nuclear energy.", "active": True},
+    {"symbol": "BNS",   "added_by": "Frank", "notes": "Frank's Portfolio — Bank of Nova Scotia. Canadian bank. Dividend income play.", "active": True},
+    {"symbol": "VTI",   "added_by": "Frank", "notes": "Frank's Portfolio — Vanguard US Total Stock Market ETF. Broad market core holding.", "active": True},
     # Benchmarks
     {"symbol": "SPY",   "added_by": "System", "notes": "Benchmark — S&P 500", "active": True},
     {"symbol": "QQQ",   "added_by": "System", "notes": "Benchmark — Nasdaq 100", "active": True},
