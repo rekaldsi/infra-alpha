@@ -36,17 +36,41 @@ QUOTE_TTL  = 60    # seconds
 VWAP_TTL   = 300   # 5 minutes
 MACRO_TTL  = 120   # 2 minutes
 
+# Frank's complete master watchlist — 27 tickers (Data Center Infra theme)
+# Source: InfraAlpha PRD.md + Telegram group calls (2026-04-17)
 STARTER_WATCHLIST = [
-    {"symbol": "IONQ",  "added_by": "Jerry",  "notes": "Quantum computing play",        "active": True},
-    {"symbol": "AMD",   "added_by": "Frank",  "notes": "AI chips, key watch",           "active": True},
-    {"symbol": "NVDA",  "added_by": "Frank",  "notes": "AI infra bellwether",           "active": True},
-    {"symbol": "PLTR",  "added_by": "Jerry",  "notes": "AI/defense data",               "active": True},
-    {"symbol": "MSFT",  "added_by": "Jerry",  "notes": "Azure + OpenAI exposure",       "active": True},
-    {"symbol": "META",  "added_by": "Frank",  "notes": "AI spend + ad revenue",         "active": True},
-    {"symbol": "TSLA",  "added_by": "Frank",  "notes": "EV + energy storage",           "active": True},
-    {"symbol": "SMCI",  "added_by": "Jerry",  "notes": "Server infra for AI",           "active": True},
-    {"symbol": "SPY",   "added_by": "System", "notes": "S&P500 benchmark",              "active": True},
-    {"symbol": "QQQ",   "added_by": "System", "notes": "Nasdaq benchmark",              "active": True},
+    # TIER 1 — Highest Conviction (core DC infra)
+    {"symbol": "VRT",   "added_by": "Frank", "notes": "TIER 1 — Vertiv. Pure-play power/cooling for DC. $15B backlog, 252% YoY order growth.", "active": True},
+    {"symbol": "GEV",   "added_by": "Frank", "notes": "TIER 1 — GE Vernova. $150B backlog, largest turbine base. Grid can't power AI without them.", "active": True},
+    {"symbol": "CMI",   "added_by": "Frank", "notes": "TIER 1 — Cummins. #1 EBITDA 22%+, order book locked to 2028. Boring and dominant.", "active": True},
+    {"symbol": "ETN",   "added_by": "Frank", "notes": "TIER 1 — Eaton. Power mgmt + liquid cooling (Boyd acquisition). Infrastructure backbone.", "active": True},
+    {"symbol": "MOD",   "added_by": "Frank", "notes": "TIER 1 — Modine. Small cap, pure thermal mgmt for DC. Higher R/R vs ETN/VRT.", "active": True},
+    {"symbol": "ABB",   "added_by": "Frank", "notes": "TIER 1 — ABB Ltd. Electrification & automation. Deep data center exposure.", "active": True},
+    {"symbol": "TT",    "added_by": "Frank", "notes": "TIER 1 — Trane Technologies. HVAC/cooling. $7.8B backlog, 120%+ applied bookings.", "active": True},
+    {"symbol": "NVT",   "added_by": "Frank", "notes": "TIER 1 — nVent Electric. Enclosures, thermal mgmt, electrical infra for DC.", "active": True},
+    # TIER 2 — Strong but diluted exposure
+    {"symbol": "GNRC",  "added_by": "Frank", "notes": "TIER 2 — Generac. DC backlog doubled, C&I +30% 2026. Still has residential DNA.", "active": True},
+    {"symbol": "CAT",   "added_by": "Frank", "notes": "TIER 2 — Caterpillar. DC revenue doubling. Diversified = slower upside.", "active": True},
+    {"symbol": "HON",   "added_by": "Frank", "notes": "TIER 2 — Honeywell. Building automation + industrial. Steady, not high-beta.", "active": True},
+    {"symbol": "JCI",   "added_by": "Frank", "notes": "TIER 2 — Johnson Controls. Building automation, HVAC, fire/security. Solid.", "active": True},
+    {"symbol": "FIX",   "added_by": "Frank", "notes": "TIER 2 — Comfort Systems. Under radar mech/electrical contractor. Heavy DC buildout.", "active": True},
+    {"symbol": "SBGSF", "added_by": "Frank", "notes": "TIER 2 — Schneider Electric. Energy mgmt. Global DC standard. OTC, watch liquidity.", "active": True},
+    {"symbol": "SIE",   "added_by": "Frank", "notes": "TIER 2 — Siemens AG. Building automation, industrial, energy. OTC liquidity friction.", "active": True},
+    {"symbol": "ATLKY", "added_by": "Frank", "notes": "TIER 2 — Atlas Copco. Compressors, vacuum tech, power gen. OTC.", "active": True},
+    {"symbol": "FTV",   "added_by": "Frank", "notes": "TIER 2 — Fortive. Industrial tech, sensors, facility instrumentation.", "active": True},
+    {"symbol": "APG",   "added_by": "Frank", "notes": "TIER 2 — API Group. Fire protection, safety, HVAC services.", "active": True},
+    {"symbol": "MSA",   "added_by": "Frank", "notes": "TIER 2 — MSA Safety. Safety equipment, gas detection, facility monitoring.", "active": True},
+    # TIER 3 — REIT / Facility services
+    {"symbol": "DLR",   "added_by": "Frank", "notes": "TIER 3 — Digital Realty. Frank's primary call. Colocation REIT. Rate cuts = tailwind.", "active": True},
+    {"symbol": "CBRE",  "added_by": "Frank", "notes": "TIER 3 — CBRE Group. Largest CRE firm, deep DC portfolio. Indirect diversifier.", "active": True},
+    {"symbol": "JLL",   "added_by": "Frank", "notes": "TIER 3 — Jones Lang LaSalle. Facility mgmt for DC operators. Indirect.", "active": True},
+    {"symbol": "CWK",   "added_by": "Frank", "notes": "TIER 3 — Cushman & Wakefield. DC facility mgmt. Indirect diversifier.", "active": True},
+    # TIER 4 — Watch / mixed
+    {"symbol": "CARR",  "added_by": "Frank", "notes": "TIER 4 — Carrier. 50% residential dilution. Thesis diluted. Watch only.", "active": True},
+    {"symbol": "SNDK",  "added_by": "Frank", "notes": "TIER 4 — SanDisk. Storage play, post-WD spinoff. Still forming. Watch.", "active": True},
+    # Benchmarks
+    {"symbol": "SPY",   "added_by": "System", "notes": "Benchmark — S&P 500", "active": True},
+    {"symbol": "QQQ",   "added_by": "System", "notes": "Benchmark — Nasdaq 100", "active": True},
 ]
 
 
