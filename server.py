@@ -133,7 +133,7 @@ _quote_cache: dict = {}
 _vwap_cache:  dict = {}
 _macro_cache: dict = {}
 QUOTE_TTL = 60
-VWAP_TTL  = 300
+VWAP_TTL  = 180   # 3min — fresher signals during market hours
 MACRO_TTL = 120
 
 
@@ -160,7 +160,8 @@ def fetch_quote(symbol: str) -> dict:
 
 def fetch_vwap_setup(symbol: str) -> dict:
     """OPTIMIZED VWAP scanner for maximum profit-taking edge.
-    Parameters tuned for high-conviction setups with tight risk/reward.
+    Grades: ELITE (5x+ vol) > HIGH (2.5x+) > NONE
+    Filters: price > VWAP, bullish candle, VWAP touch, vol >= 2.5x, momentum confirmed
     """
     now = time.time()
     if symbol in _vwap_cache and now - _vwap_cache[symbol].get("_ts", 0) < VWAP_TTL:
@@ -217,26 +218,40 @@ def fetch_vwap_setup(symbol: str) -> dict:
             return result
         
         # ── VOLUME CONFIRMATION ───────────────────────────────────────────
-        # Minimum 2.0x baseline to filter noise, 2.5x for HIGH grade
+        # Minimum 2.5x — no MEDIUM grade, HIGH-conviction only
         vol_spike = last_vol / avg_vol if avg_vol > 0 else 0
-        if vol_spike < 2.0:
+        if vol_spike < 2.5:
             result = {"symbol": symbol, "setup": False, "grade": "NONE",
                       "vwap": round(last_vwap, 2), "price": round(last_close, 2),
-                      "reason": f"volume insufficient ({vol_spike:.1f}x baseline)", "_ts": now}
+                      "reason": f"volume insufficient ({vol_spike:.1f}x baseline — need 2.5x)", "_ts": now}
             _vwap_cache[symbol] = result
             return result
-        
+
+        # ── MOMENTUM CONFIRMATION ─────────────────────────────────────────
+        # Price must be advancing vs prior candle close
+        momentum_ok = last_close > prev_close
+
+        # ── PULLBACK DEPTH ────────────────────────────────────────────────
+        # How deep was the pullback to VWAP (deeper = higher-quality setup)
+        min_low_in_pullback = min(df["Low"].iloc[-5:-1])
+        pullback_depth_pct = round(((last_vwap - min_low_in_pullback) / last_vwap) * 100, 2)
+
         # ── GRADE ASSIGNMENT ──────────────────────────────────────────────
-        # HIGH: 2.5x+ volume, Medium: 2.0-2.5x
-        grade = "HIGH" if vol_spike >= 2.5 else "MEDIUM"
-        
+        # ELITE: 5x+ vol (best setups), HIGH: 2.5x+
+        if vol_spike >= 5.0:
+            grade = "ELITE"
+        else:
+            grade = "HIGH"
+
         # ── RISK/REWARD METRICS ───────────────────────────────────────────
         pct_above = round(((last_close - last_vwap) / last_vwap) * 100, 2)
-        stop_dist = round(abs(last_close - last_low) / last_close * 100, 2)  # Stop below candle low
-        target_1r = round(last_close + (last_close - last_low), 2)  # 1:1 R/R
-        target_15r = round(last_close + (last_close - last_low) * 1.5, 2)  # 1.5:1 R/R
-        target_2r = round(last_close + (last_close - last_low) * 2.0, 2)  # 2:1 R/R
-        
+        risk       = last_close - last_low   # Risk = distance to candle low (stop)
+        stop_dist  = round(risk / last_close * 100, 2)
+        target_1r  = round(last_close + risk * 1.0, 2)   # 1:1
+        target_15r = round(last_close + risk * 1.5, 2)   # 1.5:1
+        target_2r  = round(last_close + risk * 2.0, 2)   # 2:1
+        target_3r  = round(last_close + risk * 3.0, 2)   # 3:1 — max profit target
+
         result = {
             "symbol": symbol,
             "setup": True,
@@ -245,11 +260,14 @@ def fetch_vwap_setup(symbol: str) -> dict:
             "vwap": round(last_vwap, 2),
             "pct_above_vwap": pct_above,
             "vol_spike": round(vol_spike, 1),
+            "momentum_ok": momentum_ok,
+            "pullback_depth_pct": pullback_depth_pct,
             "stop_below": round(last_low, 2),
             "stop_pct": stop_dist,
             "target_1r": target_1r,
             "target_15r": target_15r,
             "target_2r": target_2r,
+            "target_3r": target_3r,
             "_ts": now
         }
         _vwap_cache[symbol] = result
