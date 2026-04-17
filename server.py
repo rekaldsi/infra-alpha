@@ -68,7 +68,7 @@ STARTER_WATCHLIST = [
     # TIER 4 — Watch / mixed
     {"symbol": "CARR",  "added_by": "Frank", "notes": "TIER 4 — Carrier. 50% residential dilution. Thesis diluted. Watch only.", "active": True},
     {"symbol": "SNDK",  "added_by": "Frank", "notes": "TIER 4 — SanDisk. Storage play, post-WD spinoff. Still forming. Watch.", "active": True},
-    # FRANK'S PORTFOLIO (from screenshot 2026-04-17)
+    # FRANK'S PORTFOLIO — Screenshot 1 (2026-04-17)
     {"symbol": "COIN",  "added_by": "Frank", "notes": "Frank's Portfolio — Coinbase. Crypto exchange. Direct crypto exposure.", "active": True},
     {"symbol": "ABBNY", "added_by": "Frank", "notes": "Frank's Portfolio — ABB Ltd ADR. Electrification & automation. DC exposure.", "active": True},
     {"symbol": "UROY",  "added_by": "Frank", "notes": "Frank's Portfolio — Uranium Royalty Corp. Nuclear energy exposure.", "active": True},
@@ -76,6 +76,13 @@ STARTER_WATCHLIST = [
     {"symbol": "ANET",  "added_by": "Frank", "notes": "Frank's Portfolio — Arista Networks. AI networking infra. Pure-play DC switching.", "active": True},
     {"symbol": "ICHR",  "added_by": "Frank", "notes": "Frank's Portfolio — Ichor Holdings. Semiconductor fluid delivery. Chip fab supply chain.", "active": True},
     {"symbol": "SII",   "added_by": "Frank", "notes": "Frank's Portfolio — Sprott Inc. Alt asset mgmt, precious metals/uranium funds.", "active": True},
+    # FRANK'S PORTFOLIO — Screenshot 2 (2026-04-17)
+    {"symbol": "VOO",   "added_by": "Frank", "notes": "Frank's Portfolio — Vanguard S&P 500 ETF. Core index holding.", "active": True},
+    {"symbol": "VIG",   "added_by": "Frank", "notes": "Frank's Portfolio — Vanguard Dividend Appreciation ETF. Dividend growth play.", "active": True},
+    {"symbol": "AGG",   "added_by": "Frank", "notes": "Frank's Portfolio — iShares US Aggregate Bond ETF. Fixed income / defensive hedge.", "active": True},
+    {"symbol": "AMD",   "added_by": "Frank", "notes": "Frank's Portfolio — Advanced Micro Devices. AI chips, GPU compute. DC infrastructure.", "active": True},
+    {"symbol": "ET",    "added_by": "Frank", "notes": "Frank's Portfolio — Energy Transfer LP. Midstream energy. Pipeline infrastructure.", "active": True},
+    {"symbol": "NVDA",  "added_by": "Frank", "notes": "Frank's Portfolio — NVIDIA. AI chips, GPU compute. DC infrastructure bellwether.", "active": True},
     # Benchmarks
     {"symbol": "SPY",   "added_by": "System", "notes": "Benchmark — S&P 500", "active": True},
     {"symbol": "QQQ",   "added_by": "System", "notes": "Benchmark — Nasdaq 100", "active": True},
