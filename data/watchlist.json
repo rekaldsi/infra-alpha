@@ -1,0 +1,12 @@
+[
+  {"symbol": "IONQ", "added_by": "frank", "added_at": "2026-04-17T00:00:00Z", "notes": "Quantum computing play", "active": true},
+  {"symbol": "AMD", "added_by": "frank", "added_at": "2026-04-17T00:00:00Z", "notes": "Semiconductor leader", "active": true},
+  {"symbol": "NVDA", "added_by": "frank", "added_at": "2026-04-17T00:00:00Z", "notes": "AI GPU king", "active": true},
+  {"symbol": "PLTR", "added_by": "frank", "added_at": "2026-04-17T00:00:00Z", "notes": "AI data analytics", "active": true},
+  {"symbol": "MSFT", "added_by": "frank", "added_at": "2026-04-17T00:00:00Z", "notes": "AI cloud infra", "active": true},
+  {"symbol": "META", "added_by": "frank", "added_at": "2026-04-17T00:00:00Z", "notes": "Social + AI", "active": true},
+  {"symbol": "TSLA", "added_by": "frank", "added_at": "2026-04-17T00:00:00Z", "notes": "EV + robotics", "active": true},
+  {"symbol": "SMCI", "added_by": "frank", "added_at": "2026-04-17T00:00:00Z", "notes": "AI server infra", "active": true},
+  {"symbol": "SPY", "added_by": "frank", "added_at": "2026-04-17T00:00:00Z", "notes": "S&P 500 ETF", "active": true},
+  {"symbol": "QQQ", "added_by": "frank", "added_at": "2026-04-17T00:00:00Z", "notes": "Nasdaq 100 ETF", "active": true}
+]

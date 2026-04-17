@@ -1,0 +1,684 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>InfraAlpha — Stock Intelligence</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg:        #0a0a0a;
+      --card:      #111111;
+      --border:    #1e1e1e;
+      --border2:   #2a2a2a;
+      --text:      #e8e8e8;
+      --muted:     #555;
+      --muted2:    #888;
+      --green:     #22c55e;
+      --green-dim: rgba(34,197,94,0.08);
+      --red:       #ef4444;
+      --red-dim:   rgba(239,68,68,0.08);
+      --accent:    #6366f1;
+      --accent-dim:rgba(99,102,241,0.12);
+      --yellow:    #eab308;
+      --orange:    #f97316;
+      --blue:      #3b82f6;
+    }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'Segoe UI', sans-serif;
+      font-size: 14px;
+      min-height: 100vh;
+      padding-bottom: 60px;
+    }
+
+    /* ── Layout ── */
+    .container { max-width: 1400px; margin: 0 auto; padding: 0 20px; }
+
+    /* ── Header ── */
+    .header {
+      border-bottom: 1px solid var(--border);
+      background: rgba(10,10,10,0.95);
+      backdrop-filter: blur(12px);
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      padding: 14px 0;
+    }
+    .header-inner {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+    }
+    .header-left { display: flex; align-items: center; gap: 12px; }
+    .header-title { font-size: 18px; font-weight: 700; letter-spacing: -0.3px; }
+    .header-sub { font-size: 11px; color: var(--muted2); margin-top: 2px; }
+    .status-dot {
+      width: 8px; height: 8px; border-radius: 50%;
+      background: var(--green);
+      box-shadow: 0 0 6px var(--green);
+      animation: pulse 2s infinite;
+    }
+    @keyframes pulse {
+      0%,100% { opacity: 1; } 50% { opacity: 0.4; }
+    }
+    .header-right { display: flex; align-items: center; gap: 12px; }
+    .live-clock { font-size: 12px; color: var(--muted2); font-variant-numeric: tabular-nums; }
+    .refresh-btn {
+      background: none; border: 1px solid var(--border2); color: var(--muted2);
+      padding: 5px 10px; border-radius: 6px; cursor: pointer; font-size: 11px;
+      transition: all 0.15s;
+    }
+    .refresh-btn:hover { color: var(--text); border-color: var(--muted); }
+
+    /* ── Macro Bar ── */
+    .macro-bar {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 14px 20px;
+      display: flex;
+      align-items: center;
+      gap: 24px;
+      flex-wrap: wrap;
+      margin-top: 20px;
+    }
+    .macro-item { display: flex; flex-direction: column; gap: 2px; }
+    .macro-label { font-size: 10px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.5px; }
+    .macro-value { font-size: 15px; font-weight: 700; font-variant-numeric: tabular-nums; }
+    .macro-divider { width: 1px; height: 32px; background: var(--border2); }
+    .bias-pill {
+      margin-left: auto;
+      padding: 6px 14px;
+      border-radius: 20px;
+      font-size: 12px;
+      font-weight: 700;
+      letter-spacing: 0.3px;
+    }
+    .bias-crypto { background: rgba(99,102,241,0.15); color: #818cf8; border: 1px solid rgba(99,102,241,0.3); }
+    .bias-stocks { background: rgba(34,197,94,0.1); color: var(--green); border: 1px solid rgba(34,197,94,0.3); }
+    .bias-balanced { background: rgba(234,179,8,0.1); color: var(--yellow); border: 1px solid rgba(234,179,8,0.3); }
+    .bias-mixed { background: rgba(234,179,8,0.08); color: #facc15; border: 1px solid rgba(234,179,8,0.25); }
+    .bias-cash { background: rgba(239,68,68,0.1); color: var(--red); border: 1px solid rgba(239,68,68,0.3); }
+
+    /* ── Sections ── */
+    .section { margin-top: 24px; }
+    .section-header {
+      display: flex; align-items: center; gap: 8px;
+      margin-bottom: 14px;
+    }
+    .section-title { font-size: 13px; font-weight: 600; color: var(--text); }
+    .section-meta { font-size: 11px; color: var(--muted); margin-left: auto; }
+
+    /* ── VWAP Scan ── */
+    .vwap-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+      gap: 12px;
+    }
+    .vwap-card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 14px 16px;
+      transition: border-color 0.15s;
+    }
+    .vwap-card:hover { border-color: var(--border2); }
+    .vwap-card.grade-high { border-color: rgba(34,197,94,0.35); background: rgba(34,197,94,0.04); }
+    .vwap-card.grade-medium { border-color: rgba(234,179,8,0.3); background: rgba(234,179,8,0.03); }
+    .vwap-card-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px; }
+    .vwap-symbol { font-size: 16px; font-weight: 700; }
+    .grade-badge {
+      font-size: 10px; font-weight: 700; padding: 3px 8px; border-radius: 10px;
+    }
+    .grade-badge.high { background: rgba(34,197,94,0.15); color: var(--green); }
+    .grade-badge.medium { background: rgba(234,179,8,0.12); color: var(--yellow); }
+    .vwap-detail { font-size: 12px; color: var(--muted2); line-height: 1.7; }
+    .vwap-detail span { color: var(--text); font-weight: 600; }
+    .vwap-empty {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 28px;
+      text-align: center;
+      color: var(--muted);
+      font-size: 13px;
+    }
+
+    /* ── Watchlist Grid ── */
+    .watchlist-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(170px, 1fr));
+      gap: 10px;
+    }
+    .stock-card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 14px;
+      position: relative;
+      transition: border-color 0.15s, transform 0.1s;
+      cursor: default;
+    }
+    .stock-card:hover { transform: translateY(-1px); border-color: var(--border2); }
+    .stock-card.up   { border-color: rgba(34,197,94,0.25); background: rgba(34,197,94,0.04); }
+    .stock-card.down { border-color: rgba(239,68,68,0.2);  background: rgba(239,68,68,0.04); }
+    .stock-card-header { display: flex; align-items: flex-start; justify-content: space-between; }
+    .stock-symbol { font-size: 14px; font-weight: 700; }
+    .remove-btn {
+      background: none; border: none; color: var(--muted); cursor: pointer;
+      font-size: 14px; line-height: 1; padding: 0 0 0 4px;
+      opacity: 0; transition: opacity 0.15s, color 0.15s;
+    }
+    .stock-card:hover .remove-btn { opacity: 1; }
+    .remove-btn:hover { color: var(--red); }
+    .stock-price { font-size: 20px; font-weight: 700; margin-top: 8px; font-variant-numeric: tabular-nums; }
+    .stock-change {
+      font-size: 12px; font-weight: 600; margin-top: 3px;
+      font-variant-numeric: tabular-nums;
+    }
+    .stock-change.up   { color: var(--green); }
+    .stock-change.down { color: var(--red); }
+    .stock-change.flat { color: var(--muted2); }
+    .vwap-tag {
+      font-size: 10px; font-weight: 600;
+      padding: 2px 6px; border-radius: 6px;
+      margin-top: 8px; display: inline-block;
+    }
+    .vwap-tag.setup-high   { background: rgba(34,197,94,0.15); color: var(--green); }
+    .vwap-tag.setup-medium { background: rgba(234,179,8,0.12); color: var(--yellow); }
+    .vwap-tag.no-setup     { background: rgba(255,255,255,0.04); color: var(--muted); }
+    .stock-added-by { font-size: 10px; color: var(--muted); margin-top: 6px; }
+    .loading-shimmer {
+      background: linear-gradient(90deg, var(--card), var(--border), var(--card));
+      background-size: 200% 100%;
+      animation: shimmer 1.5s infinite;
+      border-radius: 4px;
+      height: 14px;
+    }
+    @keyframes shimmer { 0% { background-position: 200% 0; } 100% { background-position: -200% 0; } }
+
+    /* ── Add Stock Form ── */
+    .add-form-card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 20px;
+    }
+    .form-row { display: flex; gap: 10px; flex-wrap: wrap; }
+    .form-group { display: flex; flex-direction: column; gap: 6px; flex: 1; min-width: 140px; }
+    .form-label { font-size: 11px; color: var(--muted2); text-transform: uppercase; letter-spacing: 0.5px; }
+    .form-input {
+      background: var(--bg); border: 1px solid var(--border2);
+      color: var(--text); border-radius: 8px; padding: 9px 12px;
+      font-size: 14px; outline: none; transition: border-color 0.15s;
+      font-family: inherit;
+    }
+    .form-input:focus { border-color: var(--accent); }
+    .form-input::placeholder { color: var(--muted); }
+    .add-btn {
+      background: var(--accent); color: #fff; border: none;
+      border-radius: 8px; padding: 9px 20px;
+      font-size: 13px; font-weight: 600; cursor: pointer;
+      transition: opacity 0.15s, transform 0.1s;
+      align-self: flex-end; white-space: nowrap;
+    }
+    .add-btn:hover { opacity: 0.88; }
+    .add-btn:active { transform: scale(0.98); }
+    .add-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+    .form-msg { font-size: 12px; margin-top: 8px; }
+    .form-msg.success { color: var(--green); }
+    .form-msg.error   { color: var(--red); }
+
+    /* ── Signals Feed ── */
+    .signals-feed {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      overflow: hidden;
+      max-height: 420px;
+      overflow-y: auto;
+    }
+    .signal-row {
+      display: flex; align-items: flex-start; gap: 12px;
+      padding: 12px 16px;
+      border-bottom: 1px solid var(--border);
+      transition: background 0.1s;
+    }
+    .signal-row:last-child { border-bottom: none; }
+    .signal-row:hover { background: rgba(255,255,255,0.02); }
+    .signal-source {
+      font-size: 10px; font-weight: 700;
+      padding: 2px 7px; border-radius: 8px;
+      white-space: nowrap; align-self: center;
+      flex-shrink: 0;
+    }
+    .signal-source.frank  { background: rgba(59,130,246,0.15); color: var(--blue); }
+    .signal-source.jerry  { background: rgba(99,102,241,0.15); color: #818cf8; }
+    .signal-source.bot    { background: rgba(34,197,94,0.1); color: var(--green); }
+    .signal-source.system { background: rgba(255,255,255,0.06); color: var(--muted2); }
+    .signal-body { flex: 1; min-width: 0; }
+    .signal-symbol { font-size: 11px; font-weight: 700; color: var(--accent); }
+    .signal-msg { font-size: 12px; color: var(--muted2); margin-top: 1px; line-height: 1.4; }
+    .signal-ts { font-size: 10px; color: var(--muted); white-space: nowrap; align-self: center; flex-shrink: 0; }
+    .feed-empty { padding: 28px; text-align: center; color: var(--muted); font-size: 13px; }
+
+    /* ── Footer ── */
+    .footer {
+      margin-top: 40px;
+      padding: 16px 0;
+      border-top: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      font-size: 11px;
+      color: var(--muted);
+    }
+
+    /* ── Responsive ── */
+    @media (max-width: 640px) {
+      .macro-bar { gap: 14px; padding: 12px 14px; }
+      .macro-divider { display: none; }
+      .watchlist-grid { grid-template-columns: repeat(2, 1fr); }
+      .vwap-grid { grid-template-columns: 1fr; }
+      .form-row { flex-direction: column; }
+      .add-btn { align-self: stretch; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- HEADER -->
+<div class="header">
+  <div class="container">
+    <div class="header-inner">
+      <div class="header-left">
+        <div class="status-dot"></div>
+        <div>
+          <div class="header-title">📡 InfraAlpha</div>
+          <div class="header-sub">Stock Intelligence Portal — Jerry & Frank</div>
+        </div>
+      </div>
+      <div class="header-right">
+        <div class="live-clock" id="clock">--:-- --</div>
+        <button class="refresh-btn" onclick="refreshAll()">↻ Refresh</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="container">
+
+  <!-- MACRO BAR -->
+  <div class="macro-bar" id="macro-bar">
+    <div class="macro-item">
+      <div class="macro-label">VIX</div>
+      <div class="macro-value" id="m-vix" style="color:var(--muted2)">—</div>
+    </div>
+    <div class="macro-divider"></div>
+    <div class="macro-item">
+      <div class="macro-label">SPY</div>
+      <div class="macro-value" id="m-spy" style="color:var(--muted2)">—</div>
+    </div>
+    <div class="macro-divider"></div>
+    <div class="macro-item">
+      <div class="macro-label">QQQ</div>
+      <div class="macro-value" id="m-qqq" style="color:var(--muted2)">—</div>
+    </div>
+    <div class="macro-divider"></div>
+    <div class="macro-item">
+      <div class="macro-label">Crypto F&G</div>
+      <div class="macro-value" id="m-fg" style="color:var(--muted2)">—</div>
+    </div>
+    <div class="macro-divider"></div>
+    <div class="macro-item">
+      <div class="macro-label">BTC Dom</div>
+      <div class="macro-value" id="m-btcdom" style="color:var(--muted2)">—</div>
+    </div>
+    <div class="bias-pill bias-balanced" id="m-bias">Loading…</div>
+  </div>
+
+  <!-- VWAP SCAN -->
+  <div class="section">
+    <div class="section-header">
+      <span>📐</span>
+      <span class="section-title">VWAP Bounce Setups</span>
+      <span class="section-meta" id="vwap-meta">Frank's Strategy — refreshes every 5min</span>
+    </div>
+    <div class="vwap-grid" id="vwap-grid">
+      <div class="vwap-empty">Scanning watchlist for VWAP setups…</div>
+    </div>
+  </div>
+
+  <!-- WATCHLIST -->
+  <div class="section">
+    <div class="section-header">
+      <span>📈</span>
+      <span class="section-title">Watchlist</span>
+      <span class="section-meta" id="wl-meta">Refreshes every 60s</span>
+    </div>
+    <div class="watchlist-grid" id="watchlist-grid">
+      <!-- populated by JS -->
+    </div>
+  </div>
+
+  <!-- ADD STOCK -->
+  <div class="section">
+    <div class="section-header">
+      <span>➕</span>
+      <span class="section-title">Add Stock</span>
+    </div>
+    <div class="add-form-card">
+      <div class="form-row">
+        <div class="form-group" style="max-width:160px">
+          <label class="form-label">Ticker Symbol</label>
+          <input class="form-input" id="add-symbol" placeholder="e.g. NVDA" maxlength="10" style="text-transform:uppercase"/>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Notes (optional)</label>
+          <input class="form-input" id="add-notes" placeholder="Why are you watching this?"/>
+        </div>
+        <div class="form-group" style="max-width:140px">
+          <label class="form-label">Added by</label>
+          <input class="form-input" id="add-by" placeholder="Frank" value="Frank"/>
+        </div>
+        <button class="add-btn" id="add-btn" onclick="addStock()">Add to Watchlist</button>
+      </div>
+      <div class="form-msg" id="add-msg"></div>
+    </div>
+  </div>
+
+  <!-- SIGNALS FEED -->
+  <div class="section">
+    <div class="section-header">
+      <span>📡</span>
+      <span class="section-title">Activity Feed</span>
+      <span class="section-meta">All watchlist events + bot signals</span>
+    </div>
+    <div class="signals-feed" id="signals-feed">
+      <div class="feed-empty">Loading feed…</div>
+    </div>
+  </div>
+
+  <!-- FOOTER -->
+  <div class="footer">
+    <span>Powered by MrMagoochi 🧠</span>
+    <span id="footer-refresh">—</span>
+  </div>
+
+</div>
+
+<script>
+  // ── State ─────────────────────────────────────────────────────────────────
+  let _quotes = []
+  let _vwap   = []
+  let _macro  = {}
+
+  // ── Clock ─────────────────────────────────────────────────────────────────
+  function updateClock() {
+    const now = new Date()
+    document.getElementById('clock').textContent = now.toLocaleTimeString('en-US', {
+      hour: '2-digit', minute: '2-digit', second: '2-digit',
+      timeZone: 'America/Chicago', hour12: true
+    }) + ' CST'
+  }
+  setInterval(updateClock, 1000)
+  updateClock()
+
+  // ── Helpers ───────────────────────────────────────────────────────────────
+  function fmtPct(v) {
+    if (v == null) return '—'
+    const s = v >= 0 ? '+' : ''
+    return s + v.toFixed(2) + '%'
+  }
+  function pctColor(v) {
+    if (v == null) return 'var(--muted2)'
+    return v > 0 ? 'var(--green)' : v < 0 ? 'var(--red)' : 'var(--muted2)'
+  }
+  function fmtTime(ts) {
+    try {
+      return new Date(ts).toLocaleTimeString('en-US', {
+        hour: '2-digit', minute: '2-digit', timeZone: 'America/Chicago', hour12: true
+      })
+    } catch { return ts }
+  }
+
+  // ── Macro Bar ─────────────────────────────────────────────────────────────
+  async function loadMacro() {
+    try {
+      const r = await fetch('/api/macro')
+      const d = await r.json()
+      _macro = d
+
+      const vix = d.vix ?? null
+      document.getElementById('m-vix').textContent = vix ? vix.toFixed(2) : '—'
+      document.getElementById('m-vix').style.color =
+        vix == null ? 'var(--muted2)' : vix < 18 ? 'var(--green)' : vix > 25 ? 'var(--red)' : 'var(--yellow)'
+
+      const spy = d.spy_pct ?? null
+      document.getElementById('m-spy').textContent = fmtPct(spy)
+      document.getElementById('m-spy').style.color = pctColor(spy)
+
+      const qqq = d.qqq_pct ?? null
+      document.getElementById('m-qqq').textContent = fmtPct(qqq)
+      document.getElementById('m-qqq').style.color = pctColor(qqq)
+
+      const fg = d.fg_score ?? null
+      document.getElementById('m-fg').textContent = fg ? `${fg} (${d.fg_label || ''})` : '—'
+      document.getElementById('m-fg').style.color =
+        fg == null ? 'var(--muted2)' : fg > 60 ? 'var(--green)' : fg < 30 ? 'var(--red)' : 'var(--yellow)'
+
+      const btc = d.btc_dom ?? null
+      document.getElementById('m-btcdom').textContent = btc ? btc + '%' : '—'
+      document.getElementById('m-btcdom').style.color = 'var(--text)'
+
+      const bias = d.bias || 'BALANCED'
+      const biasPill = document.getElementById('m-bias')
+      biasPill.textContent = bias
+      biasPill.className = 'bias-pill'
+      if (bias.includes('CRYPTO') || bias.includes('Crypto')) biasPill.classList.add('bias-crypto')
+      else if (bias.includes('STOCKS') || bias.includes('CASH')) biasPill.classList.add('bias-stocks')
+      else if (bias.includes('BALANCED')) biasPill.classList.add('bias-balanced')
+      else biasPill.classList.add('bias-mixed')
+    } catch(e) { console.error('macro error', e) }
+  }
+
+  // ── VWAP Scan ─────────────────────────────────────────────────────────────
+  async function loadVwap() {
+    try {
+      const r = await fetch('/api/vwap-scan')
+      const setups = await r.json()
+      _vwap = setups
+      renderVwap(setups)
+      document.getElementById('vwap-meta').textContent =
+        `Frank's Strategy — ${setups.length} setup${setups.length !== 1 ? 's' : ''} found · ${new Date().toLocaleTimeString('en-US',{hour:'2-digit',minute:'2-digit',hour12:true,timeZone:'America/Chicago'})}`
+    } catch(e) { console.error('vwap error', e) }
+  }
+
+  function renderVwap(setups) {
+    const el = document.getElementById('vwap-grid')
+    if (!setups || !setups.length) {
+      el.innerHTML = `<div class="vwap-empty">
+        No VWAP bounce setups on the watchlist right now.<br>
+        <span style="color:var(--muted);font-size:12px;margin-top:6px;display:block">
+          Wait for price to pull back to VWAP with volume confirmation.
+        </span>
+      </div>`
+      return
+    }
+    el.innerHTML = setups.map(s => `
+      <div class="vwap-card grade-${s.grade.toLowerCase()}">
+        <div class="vwap-card-header">
+          <span class="vwap-symbol">${s.symbol}</span>
+          <span class="grade-badge ${s.grade.toLowerCase()}">${s.grade === 'HIGH' ? '🔥 HIGH' : '⚡ MEDIUM'}</span>
+        </div>
+        <div class="vwap-detail">
+          Price <span>$${s.price}</span> · VWAP <span>$${s.vwap}</span><br>
+          Above VWAP <span>+${s.pct_above_vwap}%</span> · Vol <span>${s.vol_spike}x</span> baseline
+        </div>
+        <div style="margin-top:10px;font-size:11px;color:var(--muted)">
+          Entry: rejection candle · Stop: below VWAP · Target: prev high or 1:2 R/R
+        </div>
+      </div>
+    `).join('')
+  }
+
+  // ── Watchlist ─────────────────────────────────────────────────────────────
+  async function loadWatchlist() {
+    try {
+      const r = await fetch('/api/quotes')
+      const data = await r.json()
+      _quotes = data
+      renderWatchlist(data)
+      document.getElementById('wl-meta').textContent =
+        `${data.length} stocks · refreshed ${new Date().toLocaleTimeString('en-US',{hour:'2-digit',minute:'2-digit',hour12:true,timeZone:'America/Chicago'})}`
+    } catch(e) { console.error('watchlist error', e) }
+  }
+
+  function renderWatchlist(stocks) {
+    const el = document.getElementById('watchlist-grid')
+    if (!stocks.length) { el.innerHTML = '<div style="color:var(--muted);padding:20px">No stocks in watchlist.</div>'; return }
+
+    el.innerHTML = stocks.map(s => {
+      const up   = s.changePct != null && s.changePct > 0
+      const down = s.changePct != null && s.changePct < 0
+      const cardClass = s.error ? '' : up ? 'up' : down ? 'down' : ''
+
+      let vwapTag = ''
+      if (s.vwap_grade === 'HIGH')   vwapTag = '<span class="vwap-tag setup-high">🔥 VWAP HIGH</span>'
+      else if (s.vwap_grade === 'MEDIUM') vwapTag = '<span class="vwap-tag setup-medium">⚡ VWAP MED</span>'
+      else vwapTag = '<span class="vwap-tag no-setup">No VWAP Setup</span>'
+
+      return `
+        <div class="stock-card ${cardClass}">
+          <div class="stock-card-header">
+            <span class="stock-symbol">${s.symbol}</span>
+            <button class="remove-btn" onclick="removeStock('${s.symbol}')" title="Remove">✕</button>
+          </div>
+          ${s.error
+            ? `<div style="color:var(--muted);font-size:12px;margin-top:8px">Unavailable</div>`
+            : `<div class="stock-price">$${s.price?.toFixed(2) ?? '—'}</div>
+               <div class="stock-change ${up ? 'up' : down ? 'down' : 'flat'}">
+                 ${s.change != null ? (s.change >= 0 ? '+' : '') + s.change.toFixed(2) : '—'}
+                 (${fmtPct(s.changePct)})
+               </div>`
+          }
+          ${vwapTag}
+        </div>
+      `
+    }).join('')
+  }
+
+  // ── Add Stock ─────────────────────────────────────────────────────────────
+  async function addStock() {
+    const symbol = document.getElementById('add-symbol').value.trim().toUpperCase()
+    const notes  = document.getElementById('add-notes').value.trim()
+    const addedBy = document.getElementById('add-by').value.trim() || 'Frank'
+
+    if (!symbol) { showMsg('Enter a ticker symbol', 'error'); return }
+
+    const btn = document.getElementById('add-btn')
+    btn.disabled = true
+    btn.textContent = 'Adding…'
+
+    try {
+      const r = await fetch('/api/watchlist', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({symbol, notes, added_by: addedBy})
+      })
+      const d = await r.json()
+      if (r.ok) {
+        showMsg(`✓ ${symbol} added to watchlist`, 'success')
+        document.getElementById('add-symbol').value = ''
+        document.getElementById('add-notes').value  = ''
+        setTimeout(() => { loadWatchlist(); loadSignals(); }, 500)
+      } else {
+        showMsg(d.error || 'Failed to add', 'error')
+      }
+    } catch(e) {
+      showMsg('Network error', 'error')
+    } finally {
+      btn.disabled = false
+      btn.textContent = 'Add to Watchlist'
+    }
+  }
+
+  function showMsg(msg, type) {
+    const el = document.getElementById('add-msg')
+    el.textContent = msg
+    el.className = 'form-msg ' + type
+    setTimeout(() => { el.textContent = ''; el.className = 'form-msg' }, 4000)
+  }
+
+  // Enter key to submit
+  document.addEventListener('DOMContentLoaded', () => {
+    document.getElementById('add-symbol').addEventListener('keypress', e => {
+      if (e.key === 'Enter') addStock()
+    })
+    document.getElementById('add-notes').addEventListener('keypress', e => {
+      if (e.key === 'Enter') addStock()
+    })
+  })
+
+  // ── Remove Stock ──────────────────────────────────────────────────────────
+  async function removeStock(symbol) {
+    if (!confirm(`Remove ${symbol} from watchlist?`)) return
+    try {
+      await fetch(`/api/watchlist/${symbol}`, {method: 'DELETE'})
+      loadWatchlist()
+      loadSignals()
+    } catch(e) { alert('Failed to remove') }
+  }
+
+  // ── Signals Feed ──────────────────────────────────────────────────────────
+  async function loadSignals() {
+    try {
+      const r = await fetch('/api/signals?limit=40')
+      const signals = await r.json()
+      renderSignals(signals)
+    } catch(e) { console.error('signals error', e) }
+  }
+
+  function renderSignals(signals) {
+    const el = document.getElementById('signals-feed')
+    if (!signals.length) {
+      el.innerHTML = '<div class="feed-empty">No activity yet — add stocks to get started.</div>'
+      return
+    }
+    el.innerHTML = signals.map(s => {
+      const src = (s.source || 'bot').toLowerCase()
+      const srcClass = ['frank','jerry','bot','system'].includes(src) ? src : 'system'
+      return `
+        <div class="signal-row">
+          <span class="signal-source ${srcClass}">${s.source || 'BOT'}</span>
+          <div class="signal-body">
+            ${s.symbol ? `<div class="signal-symbol">${s.symbol}</div>` : ''}
+            <div class="signal-msg">${s.message}</div>
+          </div>
+          <span class="signal-ts">${fmtTime(s.ts)}</span>
+        </div>
+      `
+    }).join('')
+  }
+
+  // ── Refresh All ───────────────────────────────────────────────────────────
+  async function refreshAll() {
+    await Promise.all([loadMacro(), loadWatchlist(), loadSignals()])
+    document.getElementById('footer-refresh').textContent =
+      'Last refresh: ' + new Date().toLocaleTimeString('en-US',{hour:'2-digit',minute:'2-digit',second:'2-digit',hour12:true,timeZone:'America/Chicago'}) + ' CST'
+  }
+
+  // ── Init & Timers ─────────────────────────────────────────────────────────
+  refreshAll()
+  loadVwap()
+
+  setInterval(refreshAll, 60000)       // quotes + macro + signals every 60s
+  setInterval(loadVwap, 300000)        // VWAP scan every 5min
+</script>
+</body>
+</html>
