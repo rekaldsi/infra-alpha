@@ -274,7 +274,7 @@ def health():
 @app.route("/api/watchlist", methods=["GET"])
 def get_watchlist():
     try:
-        rows = sb_get("infra_watchlist", "?select=*&active=eq.true&order=added_at.asc")
+        rows = sb_get("infra_watchlist", "?select=*&active=eq.true&order=sort_order.asc,added_at.asc")
         return jsonify(rows)
     except Exception as e:
         return jsonify({"error": str(e)}), 500
@@ -304,6 +304,22 @@ def add_to_watchlist():
                     f"{entry['added_by']} added {symbol}" + (f" — {entry['notes']}" if entry['notes'] else ""),
                     entry["added_by"])
         return jsonify({"ok": True, "entry": result[0] if result else entry})
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+
+@app.route("/api/watchlist/reorder", methods=["POST"])
+def reorder_watchlist():
+    """Persist drag-and-drop order. Body: {order: ['VRT','GEV',...]} """
+    data = request.get_json() or {}
+    order = data.get("order", [])
+    if not order:
+        return jsonify({"error": "order list required"}), 400
+    try:
+        for i, symbol in enumerate(order):
+            sb_patch(f"infra_watchlist?symbol=eq.{symbol}&active=eq.true",
+                     {"sort_order": i})
+        return jsonify({"ok": True, "count": len(order)})
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
@@ -340,7 +356,7 @@ def get_quote(symbol):
 @app.route("/api/quotes")
 def get_quotes():
     try:
-        wl = sb_get("infra_watchlist", "?select=symbol,notes,added_by&active=eq.true&order=added_at.asc")
+        wl = sb_get("infra_watchlist", "?select=symbol,notes,added_by&active=eq.true&order=sort_order.asc,added_at.asc")
         results = []
         for row in wl:
             sym = row["symbol"]

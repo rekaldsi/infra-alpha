@@ -161,10 +161,12 @@
       border-radius: 12px;
       padding: 14px;
       position: relative;
-      transition: border-color 0.15s, transform 0.1s;
-      cursor: default;
+      transition: border-color 0.15s, transform 0.1s, opacity 0.15s;
+      cursor: grab;
     }
     .stock-card:hover { transform: translateY(-2px); border-color: var(--accent); box-shadow: 0 4px 16px rgba(99,102,241,0.15); }
+    .stock-card.dragging { opacity: 0.35; cursor: grabbing; transform: scale(0.97); }
+    .stock-card.drag-over { border-color: var(--accent); box-shadow: 0 0 0 2px var(--accent); }
     .stock-card.up   { border-color: rgba(34,197,94,0.25); background: rgba(34,197,94,0.04); }
     .stock-card.down { border-color: rgba(239,68,68,0.2);  background: rgba(239,68,68,0.04); }
     .stock-card-header { display: flex; align-items: flex-start; justify-content: space-between; }
@@ -564,6 +566,54 @@
     return {label: '', color: 'var(--muted)', bg: ''}
   }
 
+  // ── Drag-and-drop sort ──────────────────────────────────────────────────
+  let _dragSrc = null
+
+  function onDragStart(e) {
+    _dragSrc = e.currentTarget
+    e.currentTarget.classList.add('dragging')
+    e.dataTransfer.effectAllowed = 'move'
+    e.dataTransfer.setData('text/plain', e.currentTarget.dataset.symbol)
+  }
+  function onDragEnd(e) {
+    document.querySelectorAll('.stock-card').forEach(c => c.classList.remove('dragging','drag-over'))
+  }
+  function onDragOver(e) {
+    e.preventDefault()
+    e.dataTransfer.dropEffect = 'move'
+    if (e.currentTarget !== _dragSrc) e.currentTarget.classList.add('drag-over')
+  }
+  function onDragLeave(e) { e.currentTarget.classList.remove('drag-over') }
+  function onDrop(e) {
+    e.preventDefault()
+    const target = e.currentTarget
+    target.classList.remove('drag-over')
+    if (!_dragSrc || _dragSrc === target) return
+    const grid = document.getElementById('watchlist-grid')
+    const cards = [...grid.querySelectorAll('.stock-card')]
+    const srcIdx = cards.indexOf(_dragSrc)
+    const tgtIdx = cards.indexOf(target)
+    if (srcIdx < tgtIdx) grid.insertBefore(_dragSrc, target.nextSibling)
+    else grid.insertBefore(_dragSrc, target)
+    // Persist new order
+    const newOrder = [...grid.querySelectorAll('.stock-card')].map(c => c.dataset.symbol)
+    fetch('/api/watchlist/reorder', {
+      method: 'POST',
+      headers: {'Content-Type':'application/json'},
+      body: JSON.stringify({order: newOrder})
+    }).catch(console.error)
+  }
+
+  function attachDragHandlers() {
+    document.querySelectorAll('.stock-card').forEach(card => {
+      card.addEventListener('dragstart', onDragStart)
+      card.addEventListener('dragend',   onDragEnd)
+      card.addEventListener('dragover',  onDragOver)
+      card.addEventListener('dragleave', onDragLeave)
+      card.addEventListener('drop',      onDrop)
+    })
+  }
+
   function renderWatchlist(stocks) {
     const el = document.getElementById('watchlist-grid')
     if (!stocks.length) { el.innerHTML = '<div style="color:var(--muted);padding:20px">No stocks in watchlist.</div>'; return }
@@ -587,7 +637,8 @@
       const tvUrl = `https://www.tradingview.com/chart/?symbol=${s.symbol}`
 
       return `
-        <div class="stock-card ${cardClass}" style="cursor:pointer" onclick="window.open('${tvUrl}','_blank')" title="${(s.notes||'').replace(/"/g,"'")}">
+        <div class="stock-card ${cardClass}" draggable="true" data-symbol="${s.symbol}"
+             onclick="window.open('${tvUrl}','_blank')" title="${(s.notes||'').replace(/"/g,"'")}">
           <div class="stock-card-header">
             <div style="display:flex;align-items:center;gap:5px">
               <span class="stock-symbol">${s.symbol} 📈</span>
@@ -608,6 +659,7 @@
         </div>
       `
     }).join('')
+    attachDragHandlers()
   }
 
   // ── Add Stock ─────────────────────────────────────────────────────────────
