@@ -1,12 +1,282 @@
 [
-  {"symbol": "IONQ", "added_by": "frank", "added_at": "2026-04-17T00:00:00Z", "notes": "Quantum computing play", "active": true},
-  {"symbol": "AMD", "added_by": "frank", "added_at": "2026-04-17T00:00:00Z", "notes": "Semiconductor leader", "active": true},
-  {"symbol": "NVDA", "added_by": "frank", "added_at": "2026-04-17T00:00:00Z", "notes": "AI GPU king", "active": true},
-  {"symbol": "PLTR", "added_by": "frank", "added_at": "2026-04-17T00:00:00Z", "notes": "AI data analytics", "active": true},
-  {"symbol": "MSFT", "added_by": "frank", "added_at": "2026-04-17T00:00:00Z", "notes": "AI cloud infra", "active": true},
-  {"symbol": "META", "added_by": "frank", "added_at": "2026-04-17T00:00:00Z", "notes": "Social + AI", "active": true},
-  {"symbol": "TSLA", "added_by": "frank", "added_at": "2026-04-17T00:00:00Z", "notes": "EV + robotics", "active": true},
-  {"symbol": "SMCI", "added_by": "frank", "added_at": "2026-04-17T00:00:00Z", "notes": "AI server infra", "active": true},
-  {"symbol": "SPY", "added_by": "frank", "added_at": "2026-04-17T00:00:00Z", "notes": "S&P 500 ETF", "active": true},
-  {"symbol": "QQQ", "added_by": "frank", "added_at": "2026-04-17T00:00:00Z", "notes": "Nasdaq 100 ETF", "active": true}
+  {
+    "symbol": "VRT",
+    "added_by": "Frank",
+    "added_at": "2026-04-17T14:00:00-05:00",
+    "notes": "TIER 1 \u2014 Vertiv. Pure-play power/cooling for DC. $15B backlog, 252% YoY order growth.",
+    "active": true
+  },
+  {
+    "symbol": "GEV",
+    "added_by": "Frank",
+    "added_at": "2026-04-17T14:00:00-05:00",
+    "notes": "TIER 1 \u2014 GE Vernova. $150B backlog, largest turbine base. Grid cannot power AI without them.",
+    "active": true
+  },
+  {
+    "symbol": "CMI",
+    "added_by": "Frank",
+    "added_at": "2026-04-17T14:00:00-05:00",
+    "notes": "TIER 1 \u2014 Cummins. #1 EBITDA 22%+, order book locked to 2028. Boring and dominant.",
+    "active": true
+  },
+  {
+    "symbol": "ETN",
+    "added_by": "Frank",
+    "added_at": "2026-04-17T14:00:00-05:00",
+    "notes": "TIER 1 \u2014 Eaton. Power mgmt + liquid cooling (Boyd acquisition). Infrastructure backbone.",
+    "active": true
+  },
+  {
+    "symbol": "MOD",
+    "added_by": "Frank",
+    "added_at": "2026-04-17T14:00:00-05:00",
+    "notes": "TIER 1 \u2014 Modine. Small cap, pure thermal mgmt for DC. Higher R/R vs ETN/VRT.",
+    "active": true
+  },
+  {
+    "symbol": "ABB",
+    "added_by": "Frank",
+    "added_at": "2026-04-17T14:00:00-05:00",
+    "notes": "TIER 1 \u2014 ABB Ltd. Electrification & automation. Deep data center exposure.",
+    "active": true
+  },
+  {
+    "symbol": "TT",
+    "added_by": "Frank",
+    "added_at": "2026-04-17T14:00:00-05:00",
+    "notes": "TIER 1 \u2014 Trane Technologies. HVAC/cooling. $7.8B backlog, 120%+ applied bookings.",
+    "active": true
+  },
+  {
+    "symbol": "NVT",
+    "added_by": "Frank",
+    "added_at": "2026-04-17T14:00:00-05:00",
+    "notes": "TIER 1 \u2014 nVent Electric. Enclosures, thermal mgmt, electrical infra for DC.",
+    "active": true
+  },
+  {
+    "symbol": "GNRC",
+    "added_by": "Frank",
+    "added_at": "2026-04-17T14:00:00-05:00",
+    "notes": "TIER 2 \u2014 Generac. DC backlog doubled, C&I +30% 2026. Still has residential DNA.",
+    "active": true
+  },
+  {
+    "symbol": "CAT",
+    "added_by": "Frank",
+    "added_at": "2026-04-17T14:00:00-05:00",
+    "notes": "TIER 2 \u2014 Caterpillar. DC revenue doubling. Diversified = slower upside.",
+    "active": true
+  },
+  {
+    "symbol": "HON",
+    "added_by": "Frank",
+    "added_at": "2026-04-17T14:00:00-05:00",
+    "notes": "TIER 2 \u2014 Honeywell. Building automation + industrial. Steady, not high-beta.",
+    "active": true
+  },
+  {
+    "symbol": "JCI",
+    "added_by": "Frank",
+    "added_at": "2026-04-17T14:00:00-05:00",
+    "notes": "TIER 2 \u2014 Johnson Controls. Building automation, HVAC, fire/security. Solid.",
+    "active": true
+  },
+  {
+    "symbol": "FIX",
+    "added_by": "Frank",
+    "added_at": "2026-04-17T14:00:00-05:00",
+    "notes": "TIER 2 \u2014 Comfort Systems. Under radar mech/electrical contractor. Heavy DC buildout.",
+    "active": true
+  },
+  {
+    "symbol": "SBGSF",
+    "added_by": "Frank",
+    "added_at": "2026-04-17T14:00:00-05:00",
+    "notes": "TIER 2 \u2014 Schneider Electric. Energy mgmt. Global DC standard. OTC, watch liquidity.",
+    "active": true
+  },
+  {
+    "symbol": "SIE",
+    "added_by": "Frank",
+    "added_at": "2026-04-17T14:00:00-05:00",
+    "notes": "TIER 2 \u2014 Siemens AG. Building automation, industrial, energy. OTC liquidity friction.",
+    "active": true
+  },
+  {
+    "symbol": "ATLKY",
+    "added_by": "Frank",
+    "added_at": "2026-04-17T14:00:00-05:00",
+    "notes": "TIER 2 \u2014 Atlas Copco. Compressors, vacuum tech, power gen. OTC.",
+    "active": true
+  },
+  {
+    "symbol": "FTV",
+    "added_by": "Frank",
+    "added_at": "2026-04-17T14:00:00-05:00",
+    "notes": "TIER 2 \u2014 Fortive. Industrial tech, sensors, facility instrumentation.",
+    "active": true
+  },
+  {
+    "symbol": "APG",
+    "added_by": "Frank",
+    "added_at": "2026-04-17T14:00:00-05:00",
+    "notes": "TIER 2 \u2014 API Group. Fire protection, safety, HVAC services.",
+    "active": true
+  },
+  {
+    "symbol": "MSA",
+    "added_by": "Frank",
+    "added_at": "2026-04-17T14:00:00-05:00",
+    "notes": "TIER 2 \u2014 MSA Safety. Safety equipment, gas detection, facility monitoring.",
+    "active": true
+  },
+  {
+    "symbol": "DLR",
+    "added_by": "Frank",
+    "added_at": "2026-04-17T14:00:00-05:00",
+    "notes": "TIER 3 \u2014 Digital Realty. Colocation REIT. Rate cuts = tailwind.",
+    "active": true
+  },
+  {
+    "symbol": "CBRE",
+    "added_by": "Frank",
+    "added_at": "2026-04-17T14:00:00-05:00",
+    "notes": "TIER 3 \u2014 CBRE Group. Largest CRE firm, deep DC portfolio.",
+    "active": true
+  },
+  {
+    "symbol": "JLL",
+    "added_by": "Frank",
+    "added_at": "2026-04-17T14:00:00-05:00",
+    "notes": "TIER 3 \u2014 Jones Lang LaSalle. Facility mgmt for DC operators.",
+    "active": true
+  },
+  {
+    "symbol": "CWK",
+    "added_by": "Frank",
+    "added_at": "2026-04-17T14:00:00-05:00",
+    "notes": "TIER 3 \u2014 Cushman & Wakefield. DC facility mgmt. Indirect.",
+    "active": true
+  },
+  {
+    "symbol": "CARR",
+    "added_by": "Frank",
+    "added_at": "2026-04-17T14:00:00-05:00",
+    "notes": "TIER 4 \u2014 Carrier. 50% residential dilution. Watch only.",
+    "active": true
+  },
+  {
+    "symbol": "SNDK",
+    "added_by": "Frank",
+    "added_at": "2026-04-17T14:00:00-05:00",
+    "notes": "TIER 4 \u2014 SanDisk. Post-WD spinoff. Still forming. Watch.",
+    "active": true
+  },
+  {
+    "symbol": "COIN",
+    "added_by": "Frank",
+    "added_at": "2026-04-17T14:00:00-05:00",
+    "notes": "Frank's Portfolio \u2014 Coinbase. Crypto exchange.",
+    "active": true
+  },
+  {
+    "symbol": "ABBNY",
+    "added_by": "Frank",
+    "added_at": "2026-04-17T14:00:00-05:00",
+    "notes": "Frank's Portfolio \u2014 ABB ADR. Electrification & automation.",
+    "active": true
+  },
+  {
+    "symbol": "UROY",
+    "added_by": "Frank",
+    "added_at": "2026-04-17T14:00:00-05:00",
+    "notes": "Frank's Portfolio \u2014 Uranium Royalty Corp. Nuclear energy.",
+    "active": true
+  },
+  {
+    "symbol": "BP",
+    "added_by": "Frank",
+    "added_at": "2026-04-17T14:00:00-05:00",
+    "notes": "Frank's Portfolio \u2014 BP plc. Oil major. Energy macro hedge.",
+    "active": true
+  },
+  {
+    "symbol": "ANET",
+    "added_by": "Frank",
+    "added_at": "2026-04-17T14:00:00-05:00",
+    "notes": "Frank's Portfolio \u2014 Arista Networks. AI networking infra.",
+    "active": true
+  },
+  {
+    "symbol": "ICHR",
+    "added_by": "Frank",
+    "added_at": "2026-04-17T14:00:00-05:00",
+    "notes": "Frank's Portfolio \u2014 Ichor Holdings. Chip fab supply chain.",
+    "active": true
+  },
+  {
+    "symbol": "SII",
+    "added_by": "Frank",
+    "added_at": "2026-04-17T14:00:00-05:00",
+    "notes": "Frank's Portfolio \u2014 Sprott Inc. Precious metals/uranium funds.",
+    "active": true
+  },
+  {
+    "symbol": "VOO",
+    "added_by": "Frank",
+    "added_at": "2026-04-17T14:00:00-05:00",
+    "notes": "Frank's Portfolio \u2014 Vanguard S&P 500 ETF.",
+    "active": true
+  },
+  {
+    "symbol": "VIG",
+    "added_by": "Frank",
+    "added_at": "2026-04-17T14:00:00-05:00",
+    "notes": "Frank's Portfolio \u2014 Vanguard Dividend Appreciation ETF.",
+    "active": true
+  },
+  {
+    "symbol": "AGG",
+    "added_by": "Frank",
+    "added_at": "2026-04-17T14:00:00-05:00",
+    "notes": "Frank's Portfolio \u2014 iShares US Aggregate Bond ETF.",
+    "active": true
+  },
+  {
+    "symbol": "AMD",
+    "added_by": "Frank",
+    "added_at": "2026-04-17T14:00:00-05:00",
+    "notes": "Frank's Portfolio \u2014 Advanced Micro Devices. AI chips, GPU.",
+    "active": true
+  },
+  {
+    "symbol": "ET",
+    "added_by": "Frank",
+    "added_at": "2026-04-17T14:00:00-05:00",
+    "notes": "Frank's Portfolio \u2014 Energy Transfer LP. Midstream pipeline.",
+    "active": true
+  },
+  {
+    "symbol": "NVDA",
+    "added_by": "Frank",
+    "added_at": "2026-04-17T14:00:00-05:00",
+    "notes": "Frank's Portfolio \u2014 NVIDIA. AI chips, GPU compute bellwether.",
+    "active": true
+  },
+  {
+    "symbol": "SPY",
+    "added_by": "System",
+    "added_at": "2026-04-17T14:00:00-05:00",
+    "notes": "Benchmark \u2014 S&P 500",
+    "active": true
+  },
+  {
+    "symbol": "QQQ",
+    "added_by": "System",
+    "added_at": "2026-04-17T14:00:00-05:00",
+    "notes": "Benchmark \u2014 Nasdaq 100",
+    "active": true
+  }
 ]
