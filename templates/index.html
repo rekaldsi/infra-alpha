@@ -164,7 +164,7 @@
       transition: border-color 0.15s, transform 0.1s;
       cursor: default;
     }
-    .stock-card:hover { transform: translateY(-1px); border-color: var(--border2); }
+    .stock-card:hover { transform: translateY(-2px); border-color: var(--accent); box-shadow: 0 4px 16px rgba(99,102,241,0.15); }
     .stock-card.up   { border-color: rgba(34,197,94,0.25); background: rgba(34,197,94,0.04); }
     .stock-card.down { border-color: rgba(239,68,68,0.2);  background: rgba(239,68,68,0.04); }
     .stock-card-header { display: flex; align-items: flex-start; justify-content: space-between; }
@@ -587,12 +587,10 @@
       const tvUrl = `https://www.tradingview.com/chart/?symbol=${s.symbol}`
 
       return `
-        <div class="stock-card ${cardClass}" title="${(s.notes||'').replace(/"/g,"'")}">
+        <div class="stock-card ${cardClass}" style="cursor:pointer" onclick="window.open('${tvUrl}','_blank')" title="${(s.notes||'').replace(/"/g,"'")}">
           <div class="stock-card-header">
             <div style="display:flex;align-items:center;gap:5px">
-              <a href="${tvUrl}" target="_blank" rel="noopener" style="text-decoration:none;color:inherit">
-                <span class="stock-symbol" style="cursor:pointer;border-bottom:1px dashed rgba(255,255,255,0.2)">${s.symbol} 📈</span>
-              </a>
+              <span class="stock-symbol">${s.symbol} 📈</span>
               ${tierBadge}
             </div>
             <button class="remove-btn" onclick="event.stopPropagation();removeStock('${s.symbol}')" title="Remove">✕</button>
@@ -607,7 +605,6 @@
           }
           ${vwapTag ? `<div style="margin-top:5px">${vwapTag}</div>` : ''}
           <div style="font-size:10px;color:var(--muted);margin-top:5px;line-height:1.3">${shortNote}</div>
-          <div style="font-size:10px;color:var(--accent);margin-top:6px;opacity:0.6">📊 tap to view chart</div>
         </div>
       `
     }).join('')
