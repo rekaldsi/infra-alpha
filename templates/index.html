@@ -170,12 +170,11 @@
     .stock-card-header { display: flex; align-items: flex-start; justify-content: space-between; }
     .stock-symbol { font-size: 14px; font-weight: 700; }
     .remove-btn {
-      background: none; border: none; color: var(--muted); cursor: pointer;
-      font-size: 14px; line-height: 1; padding: 0 0 0 4px;
-      opacity: 0; transition: opacity 0.15s, color 0.15s;
+      background: none; border: 1px solid var(--border2); color: var(--muted);
+      cursor: pointer; font-size: 11px; line-height: 1; padding: 3px 6px;
+      border-radius: 5px; transition: all 0.15s; white-space: nowrap;
     }
-    .stock-card:hover .remove-btn { opacity: 1; }
-    .remove-btn:hover { color: var(--red); }
+    .remove-btn:hover { color: var(--red); border-color: rgba(239,68,68,0.4); background: rgba(239,68,68,0.08); }
     .stock-price { font-size: 20px; font-weight: 700; margin-top: 8px; font-variant-numeric: tabular-nums; }
     .stock-change {
       font-size: 12px; font-weight: 600; margin-top: 3px;
@@ -222,14 +221,23 @@
     .form-input::placeholder { color: var(--muted); }
     .add-btn {
       background: var(--accent); color: #fff; border: none;
-      border-radius: 8px; padding: 9px 20px;
-      font-size: 13px; font-weight: 600; cursor: pointer;
+      border-radius: 8px; padding: 10px 22px;
+      font-size: 13px; font-weight: 700; cursor: pointer;
       transition: opacity 0.15s, transform 0.1s;
-      align-self: flex-end; white-space: nowrap;
+      align-self: flex-end; white-space: nowrap; letter-spacing: 0.2px;
     }
     .add-btn:hover { opacity: 0.88; }
     .add-btn:active { transform: scale(0.98); }
     .add-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+    .quick-add-row {
+      display: flex; gap: 8px; flex-wrap: wrap; margin-top: 10px;
+    }
+    .quick-add-chip {
+      font-size: 11px; padding: 4px 10px; border-radius: 16px;
+      border: 1px solid var(--border2); color: var(--muted2);
+      background: var(--bg); cursor: pointer; transition: all 0.15s;
+    }
+    .quick-add-chip:hover { border-color: var(--accent); color: var(--accent); }
     .form-msg { font-size: 12px; margin-top: 8px; }
     .form-msg.success { color: var(--green); }
     .form-msg.error   { color: var(--red); }
@@ -370,25 +378,32 @@
   <div class="section">
     <div class="section-header">
       <span>➕</span>
-      <span class="section-title">Add Stock</span>
+      <span class="section-title">Add / Remove Stocks</span>
+      <span class="section-meta">Changes are instant — Frank or Jerry can edit the watchlist directly here</span>
     </div>
     <div class="add-form-card">
       <div class="form-row">
         <div class="form-group" style="max-width:160px">
           <label class="form-label">Ticker Symbol</label>
-          <input class="form-input" id="add-symbol" placeholder="e.g. NVDA" maxlength="10" style="text-transform:uppercase"/>
+          <input class="form-input" id="add-symbol" placeholder="e.g. ANET" maxlength="10" style="text-transform:uppercase" autocomplete="off" autocorrect="off" autocapitalize="characters" spellcheck="false"/>
         </div>
         <div class="form-group">
-          <label class="form-label">Notes (optional)</label>
+          <label class="form-label">Notes / Thesis (optional)</label>
           <input class="form-input" id="add-notes" placeholder="Why are you watching this?"/>
         </div>
-        <div class="form-group" style="max-width:140px">
+        <div class="form-group" style="max-width:120px">
           <label class="form-label">Added by</label>
           <input class="form-input" id="add-by" placeholder="Frank" value="Frank"/>
         </div>
-        <button class="add-btn" id="add-btn" onclick="addStock()">Add to Watchlist</button>
+        <button class="add-btn" id="add-btn" onclick="addStock()">+ Add Stock</button>
       </div>
       <div class="form-msg" id="add-msg"></div>
+      <div style="margin-top:14px;padding-top:12px;border-top:1px solid var(--border)">
+        <div style="font-size:11px;color:var(--muted);margin-bottom:8px;text-transform:uppercase;letter-spacing:0.5px">To remove a stock — click the ✕ button on any card above</div>
+        <div style="font-size:12px;color:var(--muted2);line-height:1.6">
+          Changes save instantly to the portal. Any stock Frank adds here also shows up in the 6 AM morning report automatically.
+        </div>
+      </div>
     </div>
   </div>
 
