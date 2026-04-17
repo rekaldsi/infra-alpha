@@ -358,8 +358,8 @@
   <div class="section">
     <div class="section-header">
       <span>📈</span>
-      <span class="section-title">Watchlist</span>
-      <span class="section-meta" id="wl-meta">Refreshes every 60s</span>
+      <span class="section-title">Frank's Watchlist — Data Center Infra</span>
+      <span class="section-meta" id="wl-meta">T1=Core · T2=Strong · T3=REIT · T4=Watch · Refreshes every 60s</span>
     </div>
     <div class="watchlist-grid" id="watchlist-grid">
       <!-- populated by JS -->
@@ -539,6 +539,16 @@
     } catch(e) { console.error('watchlist error', e) }
   }
 
+  function getTierInfo(notes) {
+    if (!notes) return {label: '', color: 'var(--muted)', bg: ''}
+    if (notes.startsWith('TIER 1')) return {label: 'T1', color: '#22c55e', bg: 'rgba(34,197,94,0.14)'}
+    if (notes.startsWith('TIER 2')) return {label: 'T2', color: '#3b82f6', bg: 'rgba(59,130,246,0.14)'}
+    if (notes.startsWith('TIER 3')) return {label: 'T3', color: '#eab308', bg: 'rgba(234,179,8,0.14)'}
+    if (notes.startsWith('TIER 4')) return {label: 'T4', color: '#888',    bg: 'rgba(255,255,255,0.06)'}
+    if (notes.startsWith('Benchmark')) return {label: 'IDX', color: '#555', bg: 'rgba(255,255,255,0.04)'}
+    return {label: '', color: 'var(--muted)', bg: ''}
+  }
+
   function renderWatchlist(stocks) {
     const el = document.getElementById('watchlist-grid')
     if (!stocks.length) { el.innerHTML = '<div style="color:var(--muted);padding:20px">No stocks in watchlist.</div>'; return }
@@ -547,16 +557,25 @@
       const up   = s.changePct != null && s.changePct > 0
       const down = s.changePct != null && s.changePct < 0
       const cardClass = s.error ? '' : up ? 'up' : down ? 'down' : ''
+      const tier = getTierInfo(s.notes || '')
+      const tierBadge = tier.label
+        ? `<span style="font-size:9px;font-weight:800;padding:2px 6px;border-radius:5px;background:${tier.bg};color:${tier.color};letter-spacing:0.3px">${tier.label}</span>`
+        : ''
+      const shortNote = (s.notes || '')
+        .replace(/^TIER \d — /, '').replace(/^Benchmark — /, '')
+        .split('.')[0].slice(0, 52)
 
       let vwapTag = ''
-      if (s.vwap_grade === 'HIGH')   vwapTag = '<span class="vwap-tag setup-high">🔥 VWAP HIGH</span>'
-      else if (s.vwap_grade === 'MEDIUM') vwapTag = '<span class="vwap-tag setup-medium">⚡ VWAP MED</span>'
-      else vwapTag = '<span class="vwap-tag no-setup">No VWAP Setup</span>'
+      if (s.vwap_grade === 'HIGH')        vwapTag = '<span class="vwap-tag setup-high">🔥 VWAP</span>'
+      else if (s.vwap_grade === 'MEDIUM') vwapTag = '<span class="vwap-tag setup-medium">⚡ VWAP</span>'
 
       return `
-        <div class="stock-card ${cardClass}">
+        <div class="stock-card ${cardClass}" title="${(s.notes||'').replace(/"/g,"'")}">
           <div class="stock-card-header">
-            <span class="stock-symbol">${s.symbol}</span>
+            <div style="display:flex;align-items:center;gap:5px">
+              <span class="stock-symbol">${s.symbol}</span>
+              ${tierBadge}
+            </div>
             <button class="remove-btn" onclick="removeStock('${s.symbol}')" title="Remove">✕</button>
           </div>
           ${s.error
@@ -567,7 +586,8 @@
                  (${fmtPct(s.changePct)})
                </div>`
           }
-          ${vwapTag}
+          ${vwapTag ? `<div style="margin-top:5px">${vwapTag}</div>` : ''}
+          <div style="font-size:10px;color:var(--muted);margin-top:5px;line-height:1.3">${shortNote}</div>
         </div>
       `
     }).join('')
