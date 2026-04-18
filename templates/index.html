@@ -333,6 +333,88 @@
       color: var(--muted);
     }
 
+    /* ── Accounts ── */
+    .acct-card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 20px;
+      transition: border-color 0.15s;
+    }
+    .acct-card.connected { border-color: rgba(0,255,136,0.25); }
+    .acct-header { display: flex; align-items: center; gap: 10px; margin-bottom: 14px; }
+    .acct-name { font-size: 16px; font-weight: 700; flex: 1; }
+    .acct-mode-badge {
+      font-size: 10px; font-weight: 700; padding: 3px 8px; border-radius: 8px;
+      letter-spacing: 0.5px;
+    }
+    .acct-mode-badge.paper { background: rgba(234,179,8,0.12); color: var(--yellow); }
+    .acct-mode-badge.live  { background: rgba(239,68,68,0.12); color: var(--red); }
+    .acct-status { display: flex; align-items: center; gap: 6px; font-size: 12px; margin-bottom: 12px; }
+    .acct-status-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+    .acct-status-dot.on  { background: #00ff88; box-shadow: 0 0 6px #00ff88; }
+    .acct-status-dot.off { background: var(--red); }
+    .acct-portfolio {
+      background: rgba(0,255,136,0.04);
+      border: 1px solid rgba(0,255,136,0.12);
+      border-radius: 10px;
+      padding: 12px 14px;
+      margin-bottom: 14px;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px 16px;
+    }
+    .acct-pf-item { display: flex; flex-direction: column; gap: 2px; }
+    .acct-pf-label { font-size: 9px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.6px; }
+    .acct-pf-value { font-size: 14px; font-weight: 700; font-variant-numeric: tabular-nums; }
+    .acct-toggle-row {
+      display: flex; align-items: center; justify-content: space-between;
+      margin-bottom: 14px; padding: 10px 12px;
+      background: rgba(255,255,255,0.03); border-radius: 8px;
+    }
+    .acct-toggle-label { font-size: 12px; color: var(--muted2); }
+    .toggle-switch {
+      position: relative; width: 38px; height: 20px; cursor: pointer;
+    }
+    .toggle-switch input { opacity: 0; width: 0; height: 0; }
+    .toggle-slider {
+      position: absolute; inset: 0;
+      background: #2a2a2a; border-radius: 20px;
+      transition: background 0.2s;
+    }
+    .toggle-slider::before {
+      content: ''; position: absolute;
+      width: 14px; height: 14px; border-radius: 50%;
+      background: #888; bottom: 3px; left: 3px;
+      transition: transform 0.2s, background 0.2s;
+    }
+    .toggle-switch input:checked + .toggle-slider { background: rgba(0,255,136,0.2); }
+    .toggle-switch input:checked + .toggle-slider::before { transform: translateX(18px); background: #00ff88; }
+    .acct-btn {
+      border: none; border-radius: 8px; padding: 9px 16px;
+      font-size: 12px; font-weight: 700; cursor: pointer;
+      transition: opacity 0.15s, transform 0.1s; letter-spacing: 0.2px;
+    }
+    .acct-btn:hover { opacity: 0.85; }
+    .acct-btn:active { transform: scale(0.97); }
+    .acct-btn.primary   { background: #00ff88; color: #000; }
+    .acct-btn.danger    { background: rgba(239,68,68,0.15); color: var(--red); border: 1px solid rgba(239,68,68,0.3); }
+    .acct-connect-form {
+      margin-top: 14px; padding-top: 14px;
+      border-top: 1px solid var(--border);
+      display: flex; flex-direction: column; gap: 10px;
+    }
+    .acct-mode-row { display: flex; gap: 10px; }
+    .acct-mode-opt {
+      flex: 1; padding: 8px; border-radius: 8px; text-align: center;
+      border: 1px solid var(--border2); cursor: pointer; font-size: 12px; font-weight: 600;
+      color: var(--muted2); background: var(--bg); transition: all 0.15s;
+    }
+    .acct-mode-opt.selected { border-color: #00ff88; color: #00ff88; background: rgba(0,255,136,0.07); }
+    .acct-feedback { font-size: 12px; margin-top: 4px; }
+    .acct-feedback.success { color: #00ff88; }
+    .acct-feedback.error   { color: var(--red); }
+
     /* ── Responsive ── */
     @media (max-width: 640px) {
       .macro-bar { flex-direction: column; gap: 12px; padding: 14px 16px; align-items: stretch; }
@@ -542,6 +624,18 @@
     </div>
     <div class="signals-feed" id="signals-feed">
       <div class="feed-empty">Loading feed…</div>
+    </div>
+  </div>
+
+  <!-- ACCOUNTS -->
+  <div class="section">
+    <div class="section-header" style="background:rgba(0,255,136,0.05);border-left:3px solid #00ff88">
+      <span>⚙️</span>
+      <span class="section-title">Accounts</span>
+      <span class="section-meta">Alpaca API key management</span>
+    </div>
+    <div id="accounts-grid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:14px">
+      <div style="color:var(--muted);padding:20px;font-size:13px">Loading accounts…</div>
     </div>
   </div>
 
@@ -916,12 +1010,209 @@
       'Last refresh: ' + new Date().toLocaleTimeString('en-US',{hour:'2-digit',minute:'2-digit',second:'2-digit',hour12:true,timeZone:'America/Chicago'}) + ' CST'
   }
 
+  // ── Accounts ──────────────────────────────────────────────────────────────
+  let _accounts = []
+
+  async function loadAccounts() {
+    try {
+      const r = await fetch('/api/accounts')
+      _accounts = await r.json()
+      renderAccounts(_accounts)
+    } catch(e) { console.error('accounts error', e) }
+  }
+
+  function renderAccounts(accounts) {
+    const el = document.getElementById('accounts-grid')
+    if (!accounts || !accounts.length) {
+      el.innerHTML = '<div style="color:var(--muted);padding:20px;font-size:13px">No accounts configured.</div>'
+      return
+    }
+    el.innerHTML = accounts.map(a => buildAccountCard(a)).join('')
+  }
+
+  function buildAccountCard(a) {
+    const connected = a.connected
+    const modeClass = a.mode === 'live' ? 'live' : 'paper'
+    const modeLabel = a.mode === 'live' ? 'LIVE' : 'PAPER'
+
+    const portfolioSection = connected
+      ? `<div class="acct-portfolio" id="pf-${a.user_name}">
+           <div class="acct-pf-item">
+             <div class="acct-pf-label">Equity</div>
+             <div class="acct-pf-value" id="pf-equity-${a.user_name}" style="color:#00ff88">—</div>
+           </div>
+           <div class="acct-pf-item">
+             <div class="acct-pf-label">Buying Power</div>
+             <div class="acct-pf-value" id="pf-bp-${a.user_name}">—</div>
+           </div>
+           <div class="acct-pf-item">
+             <div class="acct-pf-label">Cash</div>
+             <div class="acct-pf-value" id="pf-cash-${a.user_name}">—</div>
+           </div>
+           <div class="acct-pf-item">
+             <div class="acct-pf-label">P&L Today</div>
+             <div class="acct-pf-value" id="pf-pnl-${a.user_name}">—</div>
+           </div>
+         </div>`
+      : ''
+
+    const connectForm = `
+      <div class="acct-connect-form" id="form-${a.user_name}" style="display:none">
+        <div class="form-group">
+          <label class="form-label">Key ID</label>
+          <input class="form-input" type="password" id="inp-key-${a.user_name}" placeholder="PKxxxx / AKxxxx" autocomplete="off" spellcheck="false"/>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Secret Key</label>
+          <input class="form-input" type="password" id="inp-secret-${a.user_name}" placeholder="Secret key" autocomplete="off" spellcheck="false"/>
+        </div>
+        <div class="acct-mode-row">
+          <div class="acct-mode-opt selected" id="mode-paper-${a.user_name}" onclick="selectMode('${a.user_name}','paper')">Paper</div>
+          <div class="acct-mode-opt" id="mode-live-${a.user_name}" onclick="selectMode('${a.user_name}','live')">Live</div>
+        </div>
+        <button class="acct-btn primary" onclick="submitConnect('${a.user_name}')">Connect Account</button>
+        <div class="acct-feedback" id="feedback-${a.user_name}"></div>
+      </div>`
+
+    const actionBtns = connected
+      ? `<div style="display:flex;gap:8px;flex-wrap:wrap">
+           <button class="acct-btn danger" onclick="doDisconnect('${a.user_name}')">Disconnect</button>
+         </div>`
+      : `<div style="display:flex;gap:8px;flex-wrap:wrap">
+           <button class="acct-btn primary" onclick="toggleConnectForm('${a.user_name}')">Connect Account</button>
+         </div>`
+
+    const keyHint = (connected && a.key_hint) ? `<div style="font-size:11px;color:var(--muted);margin-bottom:12px">Key: ${a.key_hint}</div>` : ''
+
+    return `
+      <div class="acct-card ${connected ? 'connected' : ''}" id="card-${a.user_name}">
+        <div class="acct-header">
+          <div class="acct-name">${a.display_name}</div>
+          <span class="acct-mode-badge ${modeClass}">${modeLabel}</span>
+        </div>
+        <div class="acct-status">
+          <div class="acct-status-dot ${connected ? 'on' : 'off'}"></div>
+          <span style="color:${connected ? '#00ff88' : 'var(--red)'}">${connected ? 'Connected' : 'Not Connected'}</span>
+        </div>
+        ${keyHint}
+        ${portfolioSection}
+        <div class="acct-toggle-row">
+          <span class="acct-toggle-label">Trading enabled</span>
+          <label class="toggle-switch">
+            <input type="checkbox" ${a.enabled ? 'checked' : ''} onchange="toggleEnabled('${a.user_name}', this.checked)"/>
+            <span class="toggle-slider"></span>
+          </label>
+        </div>
+        ${actionBtns}
+        ${connectForm}
+      </div>
+    `
+  }
+
+  // State for selected mode per user
+  const _selectedMode = {}
+
+  function selectMode(user, mode) {
+    _selectedMode[user] = mode
+    const paperEl = document.getElementById(`mode-paper-${user}`)
+    const liveEl  = document.getElementById(`mode-live-${user}`)
+    if (!paperEl || !liveEl) return
+    if (mode === 'paper') {
+      paperEl.classList.add('selected'); liveEl.classList.remove('selected')
+    } else {
+      liveEl.classList.add('selected'); paperEl.classList.remove('selected')
+    }
+  }
+
+  function toggleConnectForm(user) {
+    const form = document.getElementById(`form-${user}`)
+    if (!form) return
+    form.style.display = form.style.display === 'none' ? 'flex' : 'none'
+    if (!_selectedMode[user]) _selectedMode[user] = 'paper'
+  }
+
+  async function submitConnect(user) {
+    const keyId  = document.getElementById(`inp-key-${user}`)?.value.trim()
+    const secret = document.getElementById(`inp-secret-${user}`)?.value.trim()
+    const mode   = _selectedMode[user] || 'paper'
+    const fb     = document.getElementById(`feedback-${user}`)
+
+    if (!keyId || !secret) {
+      fb.textContent = 'Key ID and Secret are required.'
+      fb.className = 'acct-feedback error'
+      return
+    }
+
+    fb.textContent = 'Connecting…'
+    fb.className = 'acct-feedback'
+
+    try {
+      const r = await fetch(`/api/accounts/${user}/connect`, {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({key_id: keyId, secret, mode})
+      })
+      const d = await r.json()
+      if (d.success) {
+        fb.textContent = 'Connected!'
+        fb.className = 'acct-feedback success'
+        setTimeout(() => loadAccounts(), 600)
+      } else {
+        fb.textContent = d.error || 'Connection failed.'
+        fb.className = 'acct-feedback error'
+      }
+    } catch(e) {
+      fb.textContent = 'Network error.'
+      fb.className = 'acct-feedback error'
+    }
+  }
+
+  async function doDisconnect(user) {
+    if (!confirm(`Disconnect ${user}'s Alpaca account?`)) return
+    try {
+      await fetch(`/api/accounts/${user}/disconnect`, {method: 'POST'})
+      loadAccounts()
+    } catch(e) { alert('Failed to disconnect') }
+  }
+
+  async function toggleEnabled(user, enabled) {
+    try {
+      await fetch(`/api/accounts/${user}/settings`, {
+        method: 'PATCH',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({enabled})
+      })
+    } catch(e) { console.error('toggle enabled error', e) }
+  }
+
+  async function loadPortfolios() {
+    for (const a of _accounts) {
+      if (!a.connected) continue
+      try {
+        const r = await fetch(`/api/accounts/${a.user_name}/portfolio`)
+        const d = await r.json()
+        if (d.error) continue
+        const fmt = v => '$' + Number(v).toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2})
+        const pnlEl = document.getElementById(`pf-pnl-${a.user_name}`)
+        document.getElementById(`pf-equity-${a.user_name}`)?.textContent && (document.getElementById(`pf-equity-${a.user_name}`).textContent = fmt(d.equity))
+        document.getElementById(`pf-bp-${a.user_name}`) && (document.getElementById(`pf-bp-${a.user_name}`).textContent = fmt(d.buying_power))
+        document.getElementById(`pf-cash-${a.user_name}`) && (document.getElementById(`pf-cash-${a.user_name}`).textContent = fmt(d.cash))
+        if (pnlEl) {
+          pnlEl.textContent = (d.pnl_today >= 0 ? '+' : '') + fmt(d.pnl_today)
+          pnlEl.style.color = d.pnl_today >= 0 ? '#00ff88' : 'var(--red)'
+        }
+      } catch(e) { /* non-fatal */ }
+    }
+  }
+
   // ── Init & Timers ─────────────────────────────────────────────────────────
   refreshAll()
   loadVwap()
+  loadAccounts().then(() => loadPortfolios())
 
   setInterval(refreshAll, 60000)       // quotes + macro + signals every 60s
   setInterval(loadVwap, 300000)        // VWAP scan every 5min
+  setInterval(() => loadPortfolios(), 120000)  // portfolios every 2min
 </script>
 </body>
 </html>
