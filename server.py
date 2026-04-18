@@ -15,20 +15,26 @@ from zoneinfo import ZoneInfo
 
 from alpaca_crypto import encrypt, decrypt
 from alpaca_client import get_account
+from security import require_auth, rate_limit, validate_user
 
 import httpx
 from flask import Flask, jsonify, request, send_from_directory
 from flask_cors import CORS
 
 app = Flask(__name__, template_folder="templates", static_folder="static")
-CORS(app)
+app.config["MAX_CONTENT_LENGTH"] = 16 * 1024  # 16KB max request body
+
+ALLOWED_ORIGINS = os.getenv("ALLOWED_ORIGINS", "http://localhost:8083").split(",")
+CORS(app, origins=ALLOWED_ORIGINS, supports_credentials=False)
 
 PORT = int(os.getenv("PORT", 8083))
 CST  = ZoneInfo("America/Chicago")
 
 # ── Supabase config ───────────────────────────────────────────────────────────
 SUPABASE_URL = os.getenv("SUPABASE_URL", "https://uxtlxgjuccodrxhoiswf.supabase.co")
-SUPABASE_KEY = os.getenv("SUPABASE_SERVICE_KEY", "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InV4dGx4Z2p1Y2NvZHJ4aG9pc3dmIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc3NjM3MzAyOSwiZXhwIjoyMDkxOTQ5MDI5fQ.qy9XlOPd4QArqt581w6gsz4D3QIKgByR66rZq_ZHy8s")
+SUPABASE_KEY = os.getenv("SUPABASE_SERVICE_KEY")
+if not SUPABASE_KEY:
+    raise RuntimeError("SUPABASE_SERVICE_KEY env var is required")
 SB_HEADERS   = {
     "apikey":        SUPABASE_KEY,
     "Authorization": f"Bearer {SUPABASE_KEY}",
@@ -336,6 +342,24 @@ def fetch_macro() -> dict:
     return result
 
 
+# ── Security middleware ────────────────────────────────────────────────────────
+
+@app.after_request
+def add_security_headers(response):
+    response.headers["X-Content-Type-Options"] = "nosniff"
+    response.headers["X-Frame-Options"] = "DENY"
+    response.headers["X-XSS-Protection"] = "1; mode=block"
+    response.headers["Referrer-Policy"] = "strict-origin-when-cross-origin"
+    response.headers["Cache-Control"] = "no-store"
+    return response
+
+
+@app.errorhandler(Exception)
+def handle_error(e):
+    app.logger.error(f"Unhandled error: {e}", exc_info=True)
+    return jsonify({"error": "Internal server error"}), 500
+
+
 # ── API Routes ────────────────────────────────────────────────────────────────
 
 @app.route("/health")
@@ -533,13 +557,21 @@ def _mask_account(acct: dict) -> dict:
 
 
 @app.route("/api/accounts", methods=["GET"])
+@require_auth
 def get_accounts():
     accounts = _load_accounts()
     return jsonify([_mask_account(a) for a in accounts.values()])
 
 
 @app.route("/api/accounts/<user_name>/connect", methods=["POST"])
+@require_auth
 def connect_account(user_name):
+    if not validate_user(user_name):
+        return jsonify({"error": "Invalid user"}), 404
+
+    if not rate_limit(user_name, "connect", max_calls=5, window_sec=60):
+        return jsonify({"error": "Too many attempts. Wait 60 seconds."}), 429
+
     accounts = _load_accounts()
     if user_name not in accounts:
         return jsonify({"success": False, "error": "Account not found"}), 404
@@ -578,7 +610,11 @@ def connect_account(user_name):
 
 
 @app.route("/api/accounts/<user_name>/disconnect", methods=["POST"])
+@require_auth
 def disconnect_account(user_name):
+    if not validate_user(user_name):
+        return jsonify({"error": "Invalid user"}), 404
+
     accounts = _load_accounts()
     if user_name not in accounts:
         return jsonify({"success": False, "error": "Account not found"}), 404
@@ -592,7 +628,11 @@ def disconnect_account(user_name):
 
 
 @app.route("/api/accounts/<user_name>/portfolio", methods=["GET"])
+@require_auth
 def get_portfolio(user_name):
+    if not validate_user(user_name):
+        return jsonify({"error": "Invalid user"}), 404
+
     accounts = _load_accounts()
     if user_name not in accounts:
         return jsonify({"error": "Account not found"}), 404
@@ -618,7 +658,11 @@ def get_portfolio(user_name):
 
 
 @app.route("/api/accounts/<user_name>/settings", methods=["PATCH"])
+@require_auth
 def update_account_settings(user_name):
+    if not validate_user(user_name):
+        return jsonify({"error": "Invalid user"}), 404
+
     accounts = _load_accounts()
     if user_name not in accounts:
         return jsonify({"success": False, "error": "Account not found"}), 404
