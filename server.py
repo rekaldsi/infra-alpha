@@ -16,7 +16,7 @@ from alpaca_client import get_account
 from security import require_auth, rate_limit, validate_user
 
 import httpx
-from flask import Flask, jsonify, request, send_from_directory
+from flask import Flask, jsonify, request, send_from_directory, render_template
 from flask_cors import CORS
 
 app = Flask(__name__, template_folder="templates", static_folder="static")
@@ -700,9 +700,11 @@ def update_account_settings(user_name):
     return jsonify({"success": True, "account": _mask_account(acct)})
 
 
+PORTAL_API_TOKEN = os.getenv("PORTAL_API_TOKEN", "")
+
 @app.route("/")
 def index():
-    return send_from_directory("templates", "index.html")
+    return render_template("index.html", portal_token=PORTAL_API_TOKEN)
 
 
 if __name__ == "__main__":

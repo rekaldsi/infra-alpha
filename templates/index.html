@@ -3,6 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <script>window.PORTAL_TOKEN = "{{ portal_token }}";</script>
   <title>InfraAlpha — Stock Intelligence</title>
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -1013,9 +1014,13 @@
   // ── Accounts ──────────────────────────────────────────────────────────────
   let _accounts = []
 
+  function authHeaders(extra) {
+    return Object.assign({'Authorization': 'Bearer ' + (window.PORTAL_TOKEN || '')}, extra || {})
+  }
+
   async function loadAccounts() {
     try {
-      const r = await fetch('/api/accounts')
+      const r = await fetch('/api/accounts', {headers: authHeaders()})
       _accounts = await r.json()
       renderAccounts(_accounts)
     } catch(e) { console.error('accounts error', e) }
@@ -1149,7 +1154,7 @@
     try {
       const r = await fetch(`/api/accounts/${user}/connect`, {
         method: 'POST',
-        headers: {'Content-Type': 'application/json'},
+        headers: authHeaders({'Content-Type': 'application/json'}),
         body: JSON.stringify({key_id: keyId, secret, mode})
       })
       const d = await r.json()
@@ -1170,7 +1175,7 @@
   async function doDisconnect(user) {
     if (!confirm(`Disconnect ${user}'s Alpaca account?`)) return
     try {
-      await fetch(`/api/accounts/${user}/disconnect`, {method: 'POST'})
+      await fetch(`/api/accounts/${user}/disconnect`, {method: 'POST', headers: authHeaders()})
       loadAccounts()
     } catch(e) { alert('Failed to disconnect') }
   }
@@ -1179,7 +1184,7 @@
     try {
       await fetch(`/api/accounts/${user}/settings`, {
         method: 'PATCH',
-        headers: {'Content-Type': 'application/json'},
+        headers: authHeaders({'Content-Type': 'application/json'}),
         body: JSON.stringify({enabled})
       })
     } catch(e) { console.error('toggle enabled error', e) }
@@ -1189,7 +1194,7 @@
     for (const a of _accounts) {
       if (!a.connected) continue
       try {
-        const r = await fetch(`/api/accounts/${a.user_name}/portfolio`)
+        const r = await fetch(`/api/accounts/${a.user_name}/portfolio`, {headers: authHeaders()})
         const d = await r.json()
         if (d.error) continue
         const fmt = v => '$' + Number(v).toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2})
