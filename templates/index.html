@@ -276,6 +276,14 @@
     .add-btn:hover { opacity: 0.88; }
     .add-btn:active { transform: scale(0.98); }
     .add-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+    .wl-filter-btn {
+      font-size: 12px; font-weight: 600; padding: 5px 14px; border-radius: 20px;
+      border: 1px solid var(--border2); color: var(--muted2);
+      background: var(--card); cursor: pointer; transition: all 0.15s;
+      white-space: nowrap;
+    }
+    .wl-filter-btn:hover { border-color: var(--accent); color: var(--accent); }
+    .wl-filter-btn.active { border-color: #00ff88; color: #00ff88; background: rgba(0,255,136,0.08); }
     .quick-add-row {
       display: flex; gap: 8px; flex-wrap: wrap; margin-top: 10px;
     }
@@ -625,6 +633,15 @@
       <span class="section-title">Frank's Watchlist — Data Center Infra</span>
       <span class="section-meta" id="wl-meta">T1=Core · T2=Strong · T3=REIT · T4=Watch · Refreshes every 60s</span>
     </div>
+    <!-- Category Filter Buttons -->
+    <div id="wl-filters" style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:14px">
+      <button class="wl-filter-btn active" data-filter="all"             onclick="setWlFilter('all')">ALL</button>
+      <button class="wl-filter-btn"        data-filter="data-center"     onclick="setWlFilter('data-center')">🏭 Data Center</button>
+      <button class="wl-filter-btn"        data-filter="defense"         onclick="setWlFilter('defense')">🛡️ Defense</button>
+      <button class="wl-filter-btn"        data-filter="frank-portfolio" onclick="setWlFilter('frank-portfolio')">📊 Frank Portfolio</button>
+      <button class="wl-filter-btn"        data-filter="jerry-picks"     onclick="setWlFilter('jerry-picks')">🎯 Jerry Picks</button>
+      <button class="wl-filter-btn"        data-filter="indexes"         onclick="setWlFilter('indexes')">📈 Indexes</button>
+    </div>
     <div class="watchlist-grid" id="watchlist-grid">
       <!-- skeleton injected immediately by JS -->
     </div>
@@ -650,6 +667,17 @@
         <div class="form-group" style="max-width:120px">
           <label class="form-label">Added by</label>
           <input class="form-input" id="add-by" placeholder="Frank" value="Frank"/>
+        </div>
+        <div class="form-group" style="max-width:150px">
+          <label class="form-label">Category</label>
+          <select class="form-input" id="add-category">
+            <option value="general">General</option>
+            <option value="data-center">Data Center</option>
+            <option value="defense">Defense</option>
+            <option value="frank-portfolio">Frank Portfolio</option>
+            <option value="jerry-picks">Jerry Picks</option>
+            <option value="indexes">Index</option>
+          </select>
         </div>
         <button class="add-btn" id="add-btn" onclick="addStock()">+ Add Stock</button>
       </div>
@@ -1002,7 +1030,7 @@
       const tvUrl = `https://www.tradingview.com/chart/?symbol=${s.symbol}`
 
       return `
-        <div class="stock-card ${cardClass}" draggable="true" data-symbol="${s.symbol}"
+        <div class="stock-card ${cardClass}" draggable="true" data-symbol="${s.symbol}" data-category="${s.category || 'general'}"
              onclick="window.open('${tvUrl}','_blank')" title="${(s.notes||'').replace(/"/g,"'")}">
           <div class="stock-card-header">
             <div style="display:flex;align-items:center;gap:5px">
@@ -1025,13 +1053,28 @@
       `
     }).join('')
     attachDragHandlers()
+    // Re-apply active filter after render
+    if (typeof _wlFilter !== 'undefined' && _wlFilter !== 'all') setWlFilter(_wlFilter)
   }
 
   // ── Add Stock ─────────────────────────────────────────────────────────────
+  let _wlFilter = 'all'
+  function setWlFilter(filter) {
+    _wlFilter = filter
+    document.querySelectorAll('.wl-filter-btn').forEach(btn => {
+      btn.classList.toggle('active', btn.dataset.filter === filter)
+    })
+    document.querySelectorAll('.stock-card').forEach(card => {
+      card.style.display = (filter === 'all' || card.dataset.category === filter) ? '' : 'none'
+    })
+  }
+
   async function addStock() {
     const symbol = document.getElementById('add-symbol').value.trim().toUpperCase()
     const notes  = document.getElementById('add-notes').value.trim()
     const addedBy = document.getElementById('add-by').value.trim() || 'Frank'
+    const category = document.getElementById('add-category').value || 'general'
+    const addedByUser = addedBy.toLowerCase()
 
     if (!symbol) { showMsg('Enter a ticker symbol', 'error'); return }
 
@@ -1043,7 +1086,7 @@
       const r = await fetch('/api/watchlist', {
         method: 'POST',
         headers: {'Content-Type': 'application/json'},
-        body: JSON.stringify({symbol, notes, added_by: addedBy})
+        body: JSON.stringify({symbol, notes, added_by: addedBy, category, added_by_user: addedByUser})
       })
       const d = await r.json()
       if (r.ok) {

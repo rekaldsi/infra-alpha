@@ -70,63 +70,68 @@ def sb_delete(path):
 
 # ── Seed watchlist if empty ───────────────────────────────────────────────────
 STARTER_WATCHLIST = [
-    # TIER 1 — Highest Conviction
-    {"symbol":"VRT",   "added_by":"Frank",  "notes":"TIER 1 — Vertiv. Pure-play power/cooling for DC. $15B backlog, 252% YoY order growth."},
-    {"symbol":"GEV",   "added_by":"Frank",  "notes":"TIER 1 — GE Vernova. $150B backlog, largest turbine base. Grid cannot power AI without them."},
-    {"symbol":"CMI",   "added_by":"Frank",  "notes":"TIER 1 — Cummins. #1 EBITDA 22%+, order book locked to 2028. Boring and dominant."},
-    {"symbol":"ETN",   "added_by":"Frank",  "notes":"TIER 1 — Eaton. Power mgmt + liquid cooling (Boyd acquisition). Infrastructure backbone."},
-    {"symbol":"MOD",   "added_by":"Frank",  "notes":"TIER 1 — Modine. Small cap, pure thermal mgmt for DC. Higher R/R vs ETN/VRT."},
-    {"symbol":"ABBNY", "added_by":"Frank",  "notes":"TIER 1 — ABB Ltd ADR (ABBNY). Electrification & automation. Deep data center exposure. US-tradeable ADR."},
-    {"symbol":"TT",    "added_by":"Frank",  "notes":"TIER 1 — Trane Technologies. HVAC/cooling. $7.8B backlog, 120%+ applied bookings."},
-    {"symbol":"NVT",   "added_by":"Frank",  "notes":"TIER 1 — nVent Electric. Enclosures, thermal mgmt, electrical infra for DC."},
-    # TIER 2 — Strong but diluted
-    {"symbol":"GNRC",  "added_by":"Frank",  "notes":"TIER 2 — Generac. DC backlog doubled, C&I +30% 2026. Still has residential DNA."},
-    {"symbol":"CAT",   "added_by":"Frank",  "notes":"TIER 2 — Caterpillar. DC revenue doubling. Diversified = slower upside."},
-    {"symbol":"HON",   "added_by":"Frank",  "notes":"TIER 2 — Honeywell. Building automation + industrial. Steady, not high-beta."},
-    {"symbol":"JCI",   "added_by":"Frank",  "notes":"TIER 2 — Johnson Controls. Building automation, HVAC, fire/security. Solid."},
-    {"symbol":"FIX",   "added_by":"Frank",  "notes":"TIER 2 — Comfort Systems. Under radar mech/electrical contractor. Heavy DC buildout."},
-    {"symbol":"SBGSF", "added_by":"Frank",  "notes":"TIER 2 — Schneider Electric. Energy mgmt. Global DC standard. OTC, watch liquidity."},
-    {"symbol":"SIEGY", "added_by":"Frank",  "notes":"TIER 2 — Siemens AG ADR (SIEGY). Building automation, industrial, energy. US-tradeable ADR of SIE.DE."},
-    {"symbol":"ATLKY", "added_by":"Frank",  "notes":"TIER 2 — Atlas Copco. Compressors, vacuum tech, power gen. OTC."},
-    {"symbol":"FTV",   "added_by":"Frank",  "notes":"TIER 2 — Fortive. Industrial tech, sensors, facility instrumentation."},
-    {"symbol":"APG",   "added_by":"Frank",  "notes":"TIER 2 — API Group. Fire protection, safety, HVAC services."},
-    {"symbol":"MSA",   "added_by":"Frank",  "notes":"TIER 2 — MSA Safety. Safety equipment, gas detection, facility monitoring."},
-    # TIER 3 — REIT / Facility
-    {"symbol":"DLR",   "added_by":"Frank",  "notes":"TIER 3 — Digital Realty. Colocation REIT. Rate cuts = tailwind."},
-    {"symbol":"CBRE",  "added_by":"Frank",  "notes":"TIER 3 — CBRE Group. Largest CRE firm, deep DC portfolio."},
-    {"symbol":"JLL",   "added_by":"Frank",  "notes":"TIER 3 — Jones Lang LaSalle. Facility mgmt for DC operators."},
-    {"symbol":"CWK",   "added_by":"Frank",  "notes":"TIER 3 — Cushman & Wakefield. DC facility mgmt. Indirect."},
-    # TIER 4 — Watch
-    {"symbol":"CARR",  "added_by":"Frank",  "notes":"TIER 4 — Carrier. 50% residential dilution. Watch only."},
-    {"symbol":"SNDK",  "added_by":"Frank",  "notes":"TIER 4 — SanDisk. Post-WD spinoff. Still forming. Watch."},
+    # TIER 1 — Highest Conviction (Data Center)
+    {"symbol":"VRT",   "added_by":"Frank",  "category":"data-center",     "added_by_user":"frank",  "notes":"TIER 1 — Vertiv. Pure-play power/cooling for DC. $15B backlog, 252% YoY order growth."},
+    {"symbol":"GEV",   "added_by":"Frank",  "category":"data-center",     "added_by_user":"frank",  "notes":"TIER 1 — GE Vernova. $150B backlog, largest turbine base. Grid cannot power AI without them."},
+    {"symbol":"CMI",   "added_by":"Frank",  "category":"data-center",     "added_by_user":"frank",  "notes":"TIER 1 — Cummins. #1 EBITDA 22%+, order book locked to 2028. Boring and dominant."},
+    {"symbol":"ETN",   "added_by":"Frank",  "category":"data-center",     "added_by_user":"frank",  "notes":"TIER 1 — Eaton. Power mgmt + liquid cooling (Boyd acquisition). Infrastructure backbone."},
+    {"symbol":"MOD",   "added_by":"Frank",  "category":"data-center",     "added_by_user":"frank",  "notes":"TIER 1 — Modine. Small cap, pure thermal mgmt for DC. Higher R/R vs ETN/VRT."},
+    {"symbol":"TT",    "added_by":"Frank",  "category":"data-center",     "added_by_user":"frank",  "notes":"TIER 1 — Trane Technologies. HVAC/cooling. $7.8B backlog, 120%+ applied bookings."},
+    {"symbol":"NVT",   "added_by":"Frank",  "category":"data-center",     "added_by_user":"frank",  "notes":"TIER 1 — nVent Electric. Enclosures, thermal mgmt, electrical infra for DC."},
+    # TIER 2 — Strong but diluted (Data Center)
+    {"symbol":"GNRC",  "added_by":"Frank",  "category":"data-center",     "added_by_user":"frank",  "notes":"TIER 2 — Generac. DC backlog doubled, C&I +30% 2026. Still has residential DNA."},
+    {"symbol":"CAT",   "added_by":"Frank",  "category":"data-center",     "added_by_user":"frank",  "notes":"TIER 2 — Caterpillar. DC revenue doubling. Diversified = slower upside."},
+    {"symbol":"HON",   "added_by":"Frank",  "category":"data-center",     "added_by_user":"frank",  "notes":"TIER 2 — Honeywell. Building automation + industrial. Steady, not high-beta."},
+    {"symbol":"JCI",   "added_by":"Frank",  "category":"data-center",     "added_by_user":"frank",  "notes":"TIER 2 — Johnson Controls. Building automation, HVAC, fire/security. Solid."},
+    {"symbol":"FIX",   "added_by":"Frank",  "category":"data-center",     "added_by_user":"frank",  "notes":"TIER 2 — Comfort Systems. Under radar mech/electrical contractor. Heavy DC buildout."},
+    {"symbol":"SBGSF", "added_by":"Frank",  "category":"data-center",     "added_by_user":"frank",  "notes":"TIER 2 — Schneider Electric. Energy mgmt. Global DC standard. OTC, watch liquidity."},
+    {"symbol":"SIEGY", "added_by":"Frank",  "category":"data-center",     "added_by_user":"frank",  "notes":"TIER 2 — Siemens AG ADR (SIEGY). Building automation, industrial, energy. US-tradeable ADR of SIE.DE."},
+    {"symbol":"ATLKY", "added_by":"Frank",  "category":"data-center",     "added_by_user":"frank",  "notes":"TIER 2 — Atlas Copco. Compressors, vacuum tech, power gen. OTC."},
+    {"symbol":"FTV",   "added_by":"Frank",  "category":"data-center",     "added_by_user":"frank",  "notes":"TIER 2 — Fortive. Industrial tech, sensors, facility instrumentation."},
+    {"symbol":"APG",   "added_by":"Frank",  "category":"data-center",     "added_by_user":"frank",  "notes":"TIER 2 — API Group. Fire protection, safety, HVAC services."},
+    {"symbol":"MSA",   "added_by":"Frank",  "category":"data-center",     "added_by_user":"frank",  "notes":"TIER 2 — MSA Safety. Safety equipment, gas detection, facility monitoring."},
+    # TIER 3 — REIT / Facility (Data Center)
+    {"symbol":"DLR",   "added_by":"Frank",  "category":"data-center",     "added_by_user":"frank",  "notes":"TIER 3 — Digital Realty. Colocation REIT. Rate cuts = tailwind."},
+    {"symbol":"CBRE",  "added_by":"Frank",  "category":"data-center",     "added_by_user":"frank",  "notes":"TIER 3 — CBRE Group. Largest CRE firm, deep DC portfolio."},
+    {"symbol":"JLL",   "added_by":"Frank",  "category":"data-center",     "added_by_user":"frank",  "notes":"TIER 3 — Jones Lang LaSalle. Facility mgmt for DC operators."},
+    {"symbol":"CWK",   "added_by":"Frank",  "category":"data-center",     "added_by_user":"frank",  "notes":"TIER 3 — Cushman & Wakefield. DC facility mgmt. Indirect."},
+    {"symbol":"CARR",  "added_by":"Frank",  "category":"data-center",     "added_by_user":"frank",  "notes":"TIER 4 — Carrier. 50% residential dilution. Watch only."},
+    # Defense
+    {"symbol":"LMT",   "added_by":"Frank",  "category":"defense",         "added_by_user":"frank",  "notes":"Defense — Lockheed Martin. Largest US defense contractor. F-35, missiles, space."},
+    {"symbol":"RTX",   "added_by":"Frank",  "category":"defense",         "added_by_user":"frank",  "notes":"Defense — RTX (Raytheon). Missiles, avionics, Pratt & Whitney engines."},
+    {"symbol":"NOC",   "added_by":"Frank",  "category":"defense",         "added_by_user":"frank",  "notes":"Defense — Northrop Grumman. B-21 stealth bomber, space, cyber."},
+    {"symbol":"GD",    "added_by":"Frank",  "category":"defense",         "added_by_user":"frank",  "notes":"Defense — General Dynamics. Gulfstream + combat systems + IT."},
+    {"symbol":"LHX",   "added_by":"Frank",  "category":"defense",         "added_by_user":"frank",  "notes":"Defense — L3Harris Technologies. Comms, ISR, electronic warfare."},
+    {"symbol":"KTOS",  "added_by":"Frank",  "category":"defense",         "added_by_user":"frank",  "notes":"Defense — Kratos Defense. Drones, hypersonics, satellite tech."},
+    {"symbol":"AXON",  "added_by":"Frank",  "category":"defense",         "added_by_user":"frank",  "notes":"Defense — Axon Enterprise. Less-lethal weapons, Taser, body cams."},
+    {"symbol":"LDOS",  "added_by":"Frank",  "category":"defense",         "added_by_user":"frank",  "notes":"Defense — Leidos Holdings. IT/defense services. Major government contractor."},
+    {"symbol":"SAIC",  "added_by":"Frank",  "category":"defense",         "added_by_user":"frank",  "notes":"Defense — Science Applications International. Defense IT and analytics."},
+    {"symbol":"BAH",   "added_by":"Frank",  "category":"defense",         "added_by_user":"frank",  "notes":"Defense — Booz Allen Hamilton. Government consulting and defense tech."},
     # Frank's Portfolio
-    {"symbol":"COIN",  "added_by":"Frank",  "notes":"Frank's Portfolio — Coinbase. Crypto exchange."},
-    # ABBNY already listed under TIER 1 above
-    {"symbol":"UROY",  "added_by":"Frank",  "notes":"Frank's Portfolio — Uranium Royalty Corp. Nuclear energy."},
-    {"symbol":"BP",    "added_by":"Frank",  "notes":"Frank's Portfolio — BP plc. Oil major. Energy macro hedge."},
-    {"symbol":"ANET",  "added_by":"Frank",  "notes":"Frank's Portfolio — Arista Networks. AI networking infra."},
-    {"symbol":"ICHR",  "added_by":"Frank",  "notes":"Frank's Portfolio — Ichor Holdings. Chip fab supply chain."},
-    {"symbol":"SII",   "added_by":"Frank",  "notes":"Frank's Portfolio — Sprott Inc. Precious metals/uranium funds."},
-    {"symbol":"VOO",   "added_by":"Frank",  "notes":"Frank's Portfolio — Vanguard S&P 500 ETF."},
-    {"symbol":"VIG",   "added_by":"Frank",  "notes":"Frank's Portfolio — Vanguard Dividend Appreciation ETF."},
-    {"symbol":"AGG",   "added_by":"Frank",  "notes":"Frank's Portfolio — iShares US Aggregate Bond ETF."},
-    {"symbol":"AMD",   "added_by":"Frank",  "notes":"Frank's Portfolio — Advanced Micro Devices. AI chips, GPU."},
-    {"symbol":"ET",    "added_by":"Frank",  "notes":"Frank's Portfolio — Energy Transfer LP. Midstream pipeline."},
-    {"symbol":"NVDA",  "added_by":"Frank",  "notes":"Frank's Portfolio — NVIDIA. AI chips, GPU compute bellwether."},
-    {"symbol":"ONDS",  "added_by":"Frank",  "notes":"Frank's Portfolio — Ondas Holdings. Autonomous drone/rail tech."},
-    {"symbol":"RNMBY", "added_by":"Frank",  "notes":"Frank's Portfolio — Rheinmetall AG ADR. German defense/auto."},
-    {"symbol":"GLD",   "added_by":"Frank",  "notes":"Frank's Portfolio — SPDR Gold Trust. Gold hedge."},
-    {"symbol":"UEC",   "added_by":"Frank",  "notes":"Frank's Portfolio — Uranium Energy Corp. Nuclear energy."},
-    {"symbol":"BNS",   "added_by":"Frank",  "notes":"Frank's Portfolio — Bank of Nova Scotia. Dividend income."},
-    {"symbol":"VTI",   "added_by":"Frank",  "notes":"Frank's Portfolio — Vanguard US Total Stock Market ETF."},
-    # Defense / Intelligence Signals
-    {"symbol":"AXON",  "added_by":"System", "notes":"Defense — Axon Enterprise. Less-lethal weapons, Taser, body cams."},
-    {"symbol":"LDOS",  "added_by":"System", "notes":"Defense — Leidos Holdings. IT/defense services. Major government contractor."},
-    {"symbol":"SAIC",  "added_by":"System", "notes":"Defense — Science Applications International. Defense IT and analytics."},
-    {"symbol":"BAH",   "added_by":"System", "notes":"Defense — Booz Allen Hamilton. Government consulting and defense tech."},
-    # Benchmarks
-    {"symbol":"SPY",   "added_by":"System", "notes":"Benchmark — S&P 500"},
-    {"symbol":"QQQ",   "added_by":"System", "notes":"Benchmark — Nasdaq 100"},
+    {"symbol":"COIN",  "added_by":"Frank",  "category":"frank-portfolio", "added_by_user":"frank",  "notes":"Frank's Portfolio — Coinbase. Crypto exchange."},
+    {"symbol":"ABBNY", "added_by":"Frank",  "category":"frank-portfolio", "added_by_user":"frank",  "notes":"Frank's Portfolio — ABB Ltd ADR (ABBNY). Electrification & automation. US-tradeable ADR."},
+    {"symbol":"UROY",  "added_by":"Frank",  "category":"frank-portfolio", "added_by_user":"frank",  "notes":"Frank's Portfolio — Uranium Royalty Corp. Nuclear energy."},
+    {"symbol":"BP",    "added_by":"Frank",  "category":"frank-portfolio", "added_by_user":"frank",  "notes":"Frank's Portfolio — BP plc. Oil major. Energy macro hedge."},
+    {"symbol":"ANET",  "added_by":"Frank",  "category":"frank-portfolio", "added_by_user":"frank",  "notes":"Frank's Portfolio — Arista Networks. AI networking infra."},
+    {"symbol":"ICHR",  "added_by":"Frank",  "category":"frank-portfolio", "added_by_user":"frank",  "notes":"Frank's Portfolio — Ichor Holdings. Chip fab supply chain."},
+    {"symbol":"SII",   "added_by":"Frank",  "category":"frank-portfolio", "added_by_user":"frank",  "notes":"Frank's Portfolio — Sprott Inc. Precious metals/uranium funds."},
+    {"symbol":"VOO",   "added_by":"Frank",  "category":"frank-portfolio", "added_by_user":"frank",  "notes":"Frank's Portfolio — Vanguard S&P 500 ETF."},
+    {"symbol":"VIG",   "added_by":"Frank",  "category":"frank-portfolio", "added_by_user":"frank",  "notes":"Frank's Portfolio — Vanguard Dividend Appreciation ETF."},
+    {"symbol":"AGG",   "added_by":"Frank",  "category":"frank-portfolio", "added_by_user":"frank",  "notes":"Frank's Portfolio — iShares US Aggregate Bond ETF."},
+    {"symbol":"AMD",   "added_by":"Frank",  "category":"frank-portfolio", "added_by_user":"frank",  "notes":"Frank's Portfolio — Advanced Micro Devices. AI chips, GPU."},
+    {"symbol":"ET",    "added_by":"Frank",  "category":"frank-portfolio", "added_by_user":"frank",  "notes":"Frank's Portfolio — Energy Transfer LP. Midstream pipeline."},
+    {"symbol":"NVDA",  "added_by":"Frank",  "category":"frank-portfolio", "added_by_user":"frank",  "notes":"Frank's Portfolio — NVIDIA. AI chips, GPU compute bellwether."},
+    {"symbol":"ONDS",  "added_by":"Frank",  "category":"frank-portfolio", "added_by_user":"frank",  "notes":"Frank's Portfolio — Ondas Holdings. Autonomous drone/rail tech."},
+    {"symbol":"RNMBY", "added_by":"Frank",  "category":"frank-portfolio", "added_by_user":"frank",  "notes":"Frank's Portfolio — Rheinmetall AG ADR. German defense/auto."},
+    {"symbol":"GLD",   "added_by":"Frank",  "category":"frank-portfolio", "added_by_user":"frank",  "notes":"Frank's Portfolio — SPDR Gold Trust. Gold hedge."},
+    {"symbol":"UEC",   "added_by":"Frank",  "category":"frank-portfolio", "added_by_user":"frank",  "notes":"Frank's Portfolio — Uranium Energy Corp. Nuclear energy."},
+    {"symbol":"BNS",   "added_by":"Frank",  "category":"frank-portfolio", "added_by_user":"frank",  "notes":"Frank's Portfolio — Bank of Nova Scotia. Dividend income."},
+    {"symbol":"VTI",   "added_by":"Frank",  "category":"frank-portfolio", "added_by_user":"frank",  "notes":"Frank's Portfolio — Vanguard US Total Stock Market ETF."},
+    # Jerry's Picks
+    {"symbol":"SNDK",  "added_by":"Jerry",  "category":"jerry-picks",     "added_by_user":"jerry",  "notes":"Jerry's Pick — SanDisk. Post-WD spinoff. Still forming. Watch."},
+    # Indexes / Benchmarks
+    {"symbol":"SPY",   "added_by":"System", "category":"indexes",         "added_by_user":"system", "notes":"Benchmark — S&P 500"},
+    {"symbol":"QQQ",   "added_by":"System", "category":"indexes",         "added_by_user":"system", "notes":"Benchmark — Nasdaq 100"},
 ]
 
 def seed_watchlist_if_empty():
@@ -400,11 +405,13 @@ def add_to_watchlist():
         if existing:
             return jsonify({"error": f"{symbol} already in watchlist"}), 409
         entry = {
-            "symbol":   symbol,
-            "added_by": data.get("added_by", "Frank"),
-            "added_at": datetime.now(CST).isoformat(),
-            "notes":    data.get("notes", ""),
-            "active":   True,
+            "symbol":        symbol,
+            "added_by":      data.get("added_by", "Frank"),
+            "added_at":      datetime.now(CST).isoformat(),
+            "notes":         data.get("notes", ""),
+            "active":        True,
+            "category":      data.get("category", "general"),
+            "added_by_user": data.get("added_by_user", "frank"),
         }
         result = sb_post("infra_watchlist", entry)
         # Log to signals
@@ -464,17 +471,19 @@ def get_quote(symbol):
 @app.route("/api/quotes")
 def get_quotes():
     try:
-        wl = sb_get("infra_watchlist", "?select=symbol,notes,added_by&active=eq.true&order=sort_order.asc,added_at.asc")
+        wl = sb_get("infra_watchlist", "?select=symbol,notes,added_by,category,added_by_user&active=eq.true&order=sort_order.asc,added_at.asc")
         results = []
         for row in wl:
             sym = row["symbol"]
             q = fetch_quote(sym)
             v = fetch_vwap_setup(sym)
-            q["vwap_setup"] = v.get("setup", False)
-            q["vwap_grade"] = v.get("grade", "NONE")
-            q["vwap_price"] = v.get("vwap")
-            q["notes"]      = row.get("notes", "")
-            q["added_by"]   = row.get("added_by", "")
+            q["vwap_setup"]    = v.get("setup", False)
+            q["vwap_grade"]    = v.get("grade", "NONE")
+            q["vwap_price"]    = v.get("vwap")
+            q["notes"]         = row.get("notes", "")
+            q["added_by"]      = row.get("added_by", "")
+            q["category"]      = row.get("category", "general")
+            q["added_by_user"] = row.get("added_by_user", "frank")
             results.append(q)
         return jsonify(results)
     except Exception as e:
