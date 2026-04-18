@@ -13,6 +13,9 @@ from datetime import datetime, timezone
 from pathlib import Path
 from zoneinfo import ZoneInfo
 
+from alpaca_crypto import encrypt, decrypt
+from alpaca_client import get_account
+
 import httpx
 from flask import Flask, jsonify, request, send_from_directory
 from flask_cors import CORS
@@ -484,6 +487,156 @@ def add_signal():
         return jsonify({"ok": True})
     except Exception as e:
         return jsonify({"error": str(e)}), 500
+
+
+# ── Trader Accounts ───────────────────────────────────────────────────────────
+
+ACCOUNTS_FILE = Path(__file__).parent / "data" / "trader_accounts.json"
+
+
+def _load_accounts() -> dict:
+    try:
+        return json.loads(ACCOUNTS_FILE.read_text())
+    except Exception:
+        return {}
+
+
+def _save_accounts(data: dict):
+    ACCOUNTS_FILE.write_text(json.dumps(data, indent=2))
+
+
+def _key_hint(key_id: str) -> str:
+    """Return masked key: first 2 chars + '****' + last 4 chars."""
+    if not key_id or len(key_id) < 6:
+        return "****"
+    return key_id[:2] + "****" + key_id[-4:]
+
+
+def _mask_account(acct: dict) -> dict:
+    """Return a safe-to-send version of an account record (no raw secrets)."""
+    raw_key = None
+    if acct.get("alpaca_key_id") and acct.get("connected"):
+        try:
+            raw_key = decrypt(acct["alpaca_key_id"])
+        except Exception:
+            pass
+    return {
+        "user_name":    acct["user_name"],
+        "display_name": acct["display_name"],
+        "mode":         acct.get("mode", "paper"),
+        "enabled":      acct.get("enabled", False),
+        "connected":    acct.get("connected", False),
+        "risk_pct":     acct.get("risk_pct", 2.0),
+        "max_position": acct.get("max_position", 100),
+        "key_hint":     _key_hint(raw_key) if raw_key else None,
+    }
+
+
+@app.route("/api/accounts", methods=["GET"])
+def get_accounts():
+    accounts = _load_accounts()
+    return jsonify([_mask_account(a) for a in accounts.values()])
+
+
+@app.route("/api/accounts/<user_name>/connect", methods=["POST"])
+def connect_account(user_name):
+    accounts = _load_accounts()
+    if user_name not in accounts:
+        return jsonify({"success": False, "error": "Account not found"}), 404
+
+    data = request.get_json() or {}
+    key_id = (data.get("key_id") or "").strip()
+    secret = (data.get("secret") or "").strip()
+    mode   = data.get("mode", "paper")
+
+    if not key_id or not secret:
+        return jsonify({"success": False, "error": "key_id and secret are required"}), 400
+
+    if mode not in ("paper", "live"):
+        return jsonify({"success": False, "error": "mode must be 'paper' or 'live'"}), 400
+
+    # Validate key_id prefix
+    if mode == "paper" and not key_id.startswith("PK"):
+        return jsonify({"success": False, "error": "Paper keys must start with 'PK'"}), 400
+    if mode == "live" and not key_id.startswith("AK"):
+        return jsonify({"success": False, "error": "Live keys must start with 'AK'"}), 400
+
+    # Test connection
+    try:
+        alpaca_acct = get_account(key_id, secret, mode)
+    except Exception as e:
+        return jsonify({"success": False, "error": f"Alpaca connection failed: {str(e)}"}), 400
+
+    # Encrypt and save
+    accounts[user_name]["alpaca_key_id"] = encrypt(key_id)
+    accounts[user_name]["alpaca_secret"]  = encrypt(secret)
+    accounts[user_name]["mode"]           = mode
+    accounts[user_name]["connected"]      = True
+    _save_accounts(accounts)
+
+    return jsonify({"success": True, "account": _mask_account(accounts[user_name])})
+
+
+@app.route("/api/accounts/<user_name>/disconnect", methods=["POST"])
+def disconnect_account(user_name):
+    accounts = _load_accounts()
+    if user_name not in accounts:
+        return jsonify({"success": False, "error": "Account not found"}), 404
+
+    accounts[user_name]["alpaca_key_id"] = None
+    accounts[user_name]["alpaca_secret"]  = None
+    accounts[user_name]["connected"]      = False
+    _save_accounts(accounts)
+
+    return jsonify({"success": True, "account": _mask_account(accounts[user_name])})
+
+
+@app.route("/api/accounts/<user_name>/portfolio", methods=["GET"])
+def get_portfolio(user_name):
+    accounts = _load_accounts()
+    if user_name not in accounts:
+        return jsonify({"error": "Account not found"}), 404
+
+    acct = accounts[user_name]
+    if not acct.get("connected") or not acct.get("alpaca_key_id") or not acct.get("alpaca_secret"):
+        return jsonify({"error": "Account not connected"}), 400
+
+    try:
+        key_id = decrypt(acct["alpaca_key_id"])
+        secret = decrypt(acct["alpaca_secret"])
+        mode   = acct.get("mode", "paper")
+        data   = get_account(key_id, secret, mode)
+        return jsonify({
+            "equity":          float(data.get("equity", 0)),
+            "buying_power":    float(data.get("buying_power", 0)),
+            "cash":            float(data.get("cash", 0)),
+            "portfolio_value": float(data.get("portfolio_value", 0)),
+            "pnl_today":       float(data.get("equity", 0)) - float(data.get("last_equity", data.get("equity", 0))),
+        })
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+
+@app.route("/api/accounts/<user_name>/settings", methods=["PATCH"])
+def update_account_settings(user_name):
+    accounts = _load_accounts()
+    if user_name not in accounts:
+        return jsonify({"success": False, "error": "Account not found"}), 404
+
+    data = request.get_json() or {}
+    acct = accounts[user_name]
+
+    if "mode" in data and data["mode"] in ("paper", "live"):
+        acct["mode"] = data["mode"]
+    if "enabled" in data:
+        acct["enabled"] = bool(data["enabled"])
+    if "risk_pct" in data:
+        acct["risk_pct"] = float(data["risk_pct"])
+    if "max_position" in data:
+        acct["max_position"] = int(data["max_position"])
+
+    _save_accounts(accounts)
+    return jsonify({"success": True, "account": _mask_account(acct)})
 
 
 @app.route("/")
