@@ -416,6 +416,61 @@
     .acct-feedback.success { color: #00ff88; }
     .acct-feedback.error   { color: var(--red); }
 
+    /* ── Performance Dashboard ── */
+    .perf-header {
+      background: rgba(99,102,241,0.05);
+      border-left: 3px solid var(--accent);
+    }
+    .regime-badge {
+      display: inline-flex; align-items: center; gap: 6px;
+      padding: 6px 14px; border-radius: 20px;
+      font-size: 12px; font-weight: 700; letter-spacing: 0.4px;
+    }
+    .regime-badge.risk-on  { background: rgba(34,197,94,0.12); color: var(--green); border: 1px solid rgba(34,197,94,0.3); }
+    .regime-badge.caution  { background: rgba(234,179,8,0.12); color: var(--yellow); border: 1px solid rgba(234,179,8,0.3); }
+    .regime-badge.risk-off { background: rgba(239,68,68,0.12); color: var(--red); border: 1px solid rgba(239,68,68,0.3); }
+    .perf-stats-row {
+      display: flex; gap: 12px; flex-wrap: wrap; margin-bottom: 16px;
+    }
+    .perf-stat {
+      background: var(--card); border: 1px solid var(--border);
+      border-radius: 10px; padding: 14px 18px;
+      display: flex; flex-direction: column; gap: 4px; flex: 1; min-width: 120px;
+    }
+    .perf-stat-label { font-size: 9px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.6px; }
+    .perf-stat-value { font-size: 22px; font-weight: 700; font-variant-numeric: tabular-nums; }
+    .perf-stat-sub   { font-size: 11px; color: var(--muted2); }
+    .trades-table {
+      background: var(--card); border: 1px solid var(--border);
+      border-radius: 12px; overflow: hidden;
+    }
+    .trades-table-header {
+      display: grid;
+      grid-template-columns: 70px 60px 60px 80px 70px 70px 80px;
+      gap: 0; padding: 10px 16px;
+      border-bottom: 1px solid var(--border);
+      font-size: 9px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.6px;
+    }
+    .trades-table-row {
+      display: grid;
+      grid-template-columns: 70px 60px 60px 80px 70px 70px 80px;
+      gap: 0; padding: 10px 16px;
+      border-bottom: 1px solid var(--border);
+      font-size: 12px; align-items: center;
+      transition: background 0.1s;
+    }
+    .trades-table-row:last-child { border-bottom: none; }
+    .trades-table-row:hover { background: rgba(255,255,255,0.02); }
+    .trade-pnl.pos { color: var(--green); }
+    .trade-pnl.neg { color: var(--red); }
+    .conviction-pill {
+      font-size: 9px; font-weight: 700; padding: 2px 7px; border-radius: 8px;
+    }
+    .conviction-pill.HIGH   { background: rgba(34,197,94,0.15); color: var(--green); }
+    .conviction-pill.MEDIUM { background: rgba(234,179,8,0.12); color: var(--yellow); }
+    .conviction-pill.LOW    { background: rgba(255,255,255,0.06); color: var(--muted2); }
+    .trades-empty { padding: 28px; text-align: center; color: var(--muted); font-size: 13px; }
+
     /* ── Responsive ── */
     @media (max-width: 640px) {
       .macro-bar { flex-direction: column; gap: 12px; padding: 14px 16px; align-items: stretch; }
@@ -427,6 +482,13 @@
       .vwap-grid { grid-template-columns: 1fr; }
       .form-row { flex-direction: column; }
       .add-btn { align-self: stretch; }
+      .trades-table-header, .trades-table-row {
+        grid-template-columns: 70px 55px 70px 70px 1fr;
+      }
+      .trades-table-header span:nth-child(4),
+      .trades-table-header span:nth-child(5),
+      .trades-table-row span:nth-child(4),
+      .trades-table-row span:nth-child(5) { display: none; }
     }
   </style>
 </head>
@@ -637,6 +699,60 @@
     </div>
     <div id="accounts-grid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:14px">
       <div style="color:var(--muted);padding:20px;font-size:13px">Loading accounts…</div>
+    </div>
+  </div>
+
+  <!-- PERFORMANCE DASHBOARD -->
+  <div class="section">
+    <div class="section-header perf-header">
+      <span>📊</span>
+      <span class="section-title">Performance Dashboard</span>
+      <div style="display:flex;align-items:center;gap:10px;margin-left:auto">
+        <div id="regime-badge-wrap">
+          <span class="regime-badge caution" id="regime-badge">— REGIME</span>
+        </div>
+        <span class="section-meta" style="margin-left:0" id="perf-refresh-meta">Auto-refreshes every 30s</span>
+      </div>
+    </div>
+
+    <!-- Stats Row -->
+    <div class="perf-stats-row" id="perf-stats-row">
+      <div class="perf-stat">
+        <div class="perf-stat-label">Win Rate</div>
+        <div class="perf-stat-value" id="perf-win-rate" style="color:var(--green)">—</div>
+        <div class="perf-stat-sub" id="perf-wins-losses">— wins / — losses</div>
+      </div>
+      <div class="perf-stat">
+        <div class="perf-stat-label">Total P&amp;L</div>
+        <div class="perf-stat-value" id="perf-total-pnl">—</div>
+        <div class="perf-stat-sub" id="perf-total-trades">— closed trades</div>
+      </div>
+      <div class="perf-stat">
+        <div class="perf-stat-label">Avg P&amp;L / Trade</div>
+        <div class="perf-stat-value" id="perf-avg-pnl">—</div>
+        <div class="perf-stat-sub">per closed trade</div>
+      </div>
+      <div class="perf-stat">
+        <div class="perf-stat-label">VIX (Intelligence)</div>
+        <div class="perf-stat-value" id="perf-vix">—</div>
+        <div class="perf-stat-sub" id="perf-spy-trend">SPY trend: —</div>
+      </div>
+    </div>
+
+    <!-- Last 10 Trades Table -->
+    <div class="trades-table" id="trades-table">
+      <div class="trades-table-header">
+        <span>Symbol</span>
+        <span>Side</span>
+        <span>Shares</span>
+        <span>Entry</span>
+        <span>Conviction</span>
+        <span>P&amp;L</span>
+        <span>Status</span>
+      </div>
+      <div id="trades-table-body">
+        <div class="trades-empty">Loading trade history…</div>
+      </div>
     </div>
   </div>
 
@@ -1210,14 +1326,132 @@
     }
   }
 
+  // ── Performance Dashboard ─────────────────────────────────────────────────
+
+  async function loadRegime() {
+    try {
+      const r = await fetch('/api/intelligence/regime')
+      if (!r.ok) return
+      const d = await r.json()
+      if (d.error) return
+
+      const badge = document.getElementById('regime-badge')
+      const regime = d.regime || 'CAUTION'
+      badge.textContent = regime.replace('_', ' ')
+      badge.className = 'regime-badge'
+      if (regime === 'RISK_ON')  badge.classList.add('risk-on')
+      else if (regime === 'RISK_OFF') badge.classList.add('risk-off')
+      else badge.classList.add('caution')
+
+      const vixEl = document.getElementById('perf-vix')
+      if (vixEl && d.vix) {
+        vixEl.textContent = d.vix.toFixed(2)
+        vixEl.style.color = d.vix < 20 ? 'var(--green)' : d.vix > 25 ? 'var(--red)' : 'var(--yellow)'
+      }
+      const spyEl = document.getElementById('perf-spy-trend')
+      if (spyEl) spyEl.textContent = `SPY trend: ${(d.spy_trend || 'unknown').replace('_', ' ')}`
+    } catch(e) { /* non-fatal */ }
+  }
+
+  async function loadPerformance() {
+    try {
+      const r = await fetch('/api/trades/performance', {headers: authHeaders()})
+      if (!r.ok) return
+      const d = await r.json()
+      if (d.error) return
+
+      const fmt = v => (v >= 0 ? '+' : '') + '$' + Math.abs(v).toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2})
+
+      const winRateEl = document.getElementById('perf-win-rate')
+      if (winRateEl) {
+        winRateEl.textContent = d.win_rate.toFixed(1) + '%'
+        winRateEl.style.color = d.win_rate >= 50 ? 'var(--green)' : 'var(--red)'
+      }
+
+      const wlEl = document.getElementById('perf-wins-losses')
+      if (wlEl) wlEl.textContent = `${d.wins} wins / ${d.losses} losses`
+
+      const pnlEl = document.getElementById('perf-total-pnl')
+      if (pnlEl) {
+        pnlEl.textContent = fmt(d.total_pnl)
+        pnlEl.style.color = d.total_pnl >= 0 ? 'var(--green)' : 'var(--red)'
+      }
+
+      const ttEl = document.getElementById('perf-total-trades')
+      if (ttEl) ttEl.textContent = `${d.total_trades} closed trades`
+
+      const avgEl = document.getElementById('perf-avg-pnl')
+      if (avgEl) {
+        avgEl.textContent = fmt(d.avg_pnl)
+        avgEl.style.color = d.avg_pnl >= 0 ? 'var(--green)' : 'var(--red)'
+      }
+    } catch(e) { /* non-fatal */ }
+  }
+
+  async function loadRecentTrades() {
+    try {
+      const r = await fetch('/api/trades?limit=10', {headers: authHeaders()})
+      if (!r.ok) {
+        document.getElementById('trades-table-body').innerHTML =
+          '<div class="trades-empty">Connect an account to view trade history.</div>'
+        return
+      }
+      const trades = await r.json()
+      if (trades.error || !trades.length) {
+        document.getElementById('trades-table-body').innerHTML =
+          '<div class="trades-empty">No trades logged yet. Intelligence engine will log HIGH conviction signals automatically.</div>'
+        return
+      }
+      const fmtPrice = v => v != null ? '$' + Number(v).toFixed(2) : '—'
+      const fmtPnl = v => {
+        if (v == null) return '—'
+        return (v >= 0 ? '+' : '') + '$' + Math.abs(v).toFixed(2)
+      }
+      const fmtDate = ts => {
+        try {
+          return new Date(ts).toLocaleString('en-US', {
+            month: 'numeric', day: 'numeric',
+            hour: '2-digit', minute: '2-digit',
+            hour12: true, timeZone: 'America/Chicago'
+          })
+        } catch { return ts || '—' }
+      }
+      document.getElementById('trades-table-body').innerHTML = trades.map(t => {
+        const pnl = t.pnl != null ? t.pnl : null
+        const pnlClass = pnl == null ? '' : pnl > 0 ? 'pos' : 'neg'
+        const conv = t.conviction || 'LOW'
+        return `
+          <div class="trades-table-row">
+            <span style="font-weight:700">${t.symbol || '—'}</span>
+            <span style="color:var(--muted2);text-transform:uppercase;font-size:11px">${t.side || '—'}</span>
+            <span>${t.shares ?? '—'}</span>
+            <span>${fmtPrice(t.entry_price)}</span>
+            <span><span class="conviction-pill ${conv}">${conv}</span></span>
+            <span class="trade-pnl ${pnlClass}">${fmtPnl(pnl)}</span>
+            <span style="color:var(--muted2);font-size:11px">${t.status || '—'}</span>
+          </div>
+        `
+      }).join('')
+    } catch(e) { /* non-fatal */ }
+  }
+
+  async function loadPerformanceDashboard() {
+    await Promise.all([loadRegime(), loadPerformance(), loadRecentTrades()])
+    const metaEl = document.getElementById('perf-refresh-meta')
+    if (metaEl) metaEl.textContent =
+      'Refreshed ' + new Date().toLocaleTimeString('en-US', {hour:'2-digit',minute:'2-digit',hour12:true,timeZone:'America/Chicago'})
+  }
+
   // ── Init & Timers ─────────────────────────────────────────────────────────
   refreshAll()
   loadVwap()
   loadAccounts().then(() => loadPortfolios())
+  loadPerformanceDashboard()
 
   setInterval(refreshAll, 60000)       // quotes + macro + signals every 60s
   setInterval(loadVwap, 300000)        // VWAP scan every 5min
   setInterval(() => loadPortfolios(), 120000)  // portfolios every 2min
+  setInterval(loadPerformanceDashboard, 30000) // performance dashboard every 30s
 </script>
 </body>
 </html>

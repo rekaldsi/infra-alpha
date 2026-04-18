@@ -19,6 +19,15 @@ import httpx
 from flask import Flask, jsonify, request, send_from_directory, render_template
 from flask_cors import CORS
 
+# Intelligence engine (imported after app init to avoid circular issues)
+try:
+    import intelligence
+    import paper_trader
+    _INTELLIGENCE_AVAILABLE = True
+except ImportError as _ie:
+    _INTELLIGENCE_AVAILABLE = False
+    print(f"[InfraAlpha] Intelligence engine not available: {_ie}")
+
 app = Flask(__name__, template_folder="templates", static_folder="static")
 app.config["MAX_CONTENT_LENGTH"] = 16 * 1024  # 16KB max request body
 
@@ -110,6 +119,11 @@ STARTER_WATCHLIST = [
     {"symbol":"UEC",   "added_by":"Frank",  "notes":"Frank's Portfolio — Uranium Energy Corp. Nuclear energy."},
     {"symbol":"BNS",   "added_by":"Frank",  "notes":"Frank's Portfolio — Bank of Nova Scotia. Dividend income."},
     {"symbol":"VTI",   "added_by":"Frank",  "notes":"Frank's Portfolio — Vanguard US Total Stock Market ETF."},
+    # Defense / Intelligence Signals
+    {"symbol":"AXON",  "added_by":"System", "notes":"Defense — Axon Enterprise. Less-lethal weapons, Taser, body cams."},
+    {"symbol":"LDOS",  "added_by":"System", "notes":"Defense — Leidos Holdings. IT/defense services. Major government contractor."},
+    {"symbol":"SAIC",  "added_by":"System", "notes":"Defense — Science Applications International. Defense IT and analytics."},
+    {"symbol":"BAH",   "added_by":"System", "notes":"Defense — Booz Allen Hamilton. Government consulting and defense tech."},
     # Benchmarks
     {"symbol":"SPY",   "added_by":"System", "notes":"Benchmark — S&P 500"},
     {"symbol":"QQQ",   "added_by":"System", "notes":"Benchmark — Nasdaq 100"},
@@ -707,6 +721,208 @@ def index():
     return render_template("index.html", portal_token=PORTAL_API_TOKEN)
 
 
+# ── Intelligence Engine Endpoints ────────────────────────────────────────────
+
+_intel_scan_cache: dict = {}   # {"data": [...], "ts": float}
+_INTEL_SCAN_TTL = 5 * 60       # 5 minutes
+
+
+@app.route("/api/intelligence/scan")
+def intelligence_scan():
+    """Run opportunity scan across watchlist + expanded universe. Cached 5min."""
+    if not _INTELLIGENCE_AVAILABLE:
+        return jsonify({"error": "intelligence module not available"}), 503
+
+    now = time.time()
+    cached = _intel_scan_cache.get("scan")
+    if cached and (now - cached["ts"]) < _INTEL_SCAN_TTL:
+        return jsonify({"results": cached["data"], "cached": True,
+                        "age_sec": int(now - cached["ts"])})
+
+    try:
+        wl = sb_get("infra_watchlist", "?select=symbol&active=eq.true")
+        watchlist = [r["symbol"] for r in wl]
+        results = intelligence.hunt_opportunities(watchlist)
+        _intel_scan_cache["scan"] = {"data": results, "ts": now}
+        return jsonify({"results": results, "cached": False, "count": len(results)})
+    except Exception as e:
+        app.logger.error(f"Intelligence scan error: {e}")
+        return jsonify({"error": str(e)}), 500
+
+
+@app.route("/api/intelligence/regime")
+def intelligence_regime():
+    """Return current macro regime (RISK_ON / CAUTION / RISK_OFF). No auth."""
+    if not _INTELLIGENCE_AVAILABLE:
+        return jsonify({"error": "intelligence module not available"}), 503
+    try:
+        regime = intelligence.get_macro_regime()
+        return jsonify(regime)
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+
+@app.route("/api/intelligence/execute", methods=["POST"])
+@require_auth
+def intelligence_execute():
+    """Execute a paper trade for a given signal + user. Requires auth."""
+    if not _INTELLIGENCE_AVAILABLE:
+        return jsonify({"error": "intelligence module not available"}), 503
+
+    data = request.get_json() or {}
+    user_name = data.get("user_name", "").strip().lower()
+    signal = data.get("signal", {})
+
+    if not user_name or not signal:
+        return jsonify({"error": "user_name and signal required"}), 400
+
+    if not validate_user(user_name):
+        return jsonify({"error": "Invalid user"}), 404
+
+    accounts = _load_accounts()
+    if user_name not in accounts:
+        return jsonify({"error": "Account not found"}), 404
+
+    acct = accounts[user_name]
+    if not acct.get("connected") or not acct.get("alpaca_key_id") or not acct.get("alpaca_secret"):
+        return jsonify({"error": "Account not connected to Alpaca"}), 400
+
+    try:
+        api_key = decrypt(acct["alpaca_key_id"])
+        api_secret = decrypt(acct["alpaca_secret"])
+    except Exception:
+        return jsonify({"error": "Failed to decrypt API credentials"}), 500
+
+    account_for_trader = {
+        "api_key": api_key,
+        "api_secret": api_secret,
+        "enabled": acct.get("enabled", False),
+        "telegram_chat_id": acct.get("telegram_chat_id", ""),
+    }
+
+    # Add position sizing to signal if not present
+    if "shares" not in signal:
+        equity = data.get("equity", 100000.0)
+        risk_pct = acct.get("risk_pct", 2.0)
+        entry = signal.get("vwap_setup", {}).get("price", 0)
+        stop = signal.get("vwap_setup", {}).get("vwap", 0)
+        if entry > 0 and stop > 0 and stop < entry:
+            sizing = intelligence.calculate_position(equity, risk_pct, entry, stop)
+            signal.update(sizing)
+
+    result = paper_trader.execute_paper_trade(user_name, signal, account_for_trader)
+    return jsonify(result)
+
+
+@app.route("/api/trades")
+@require_auth
+def get_trades():
+    """Get recent trades from infra_trades table."""
+    limit = int(request.args.get("limit", 50))
+    user = request.args.get("user", "")
+    try:
+        query = f"?select=*&order=opened_at.desc&limit={limit}"
+        if user:
+            query += f"&user_name=eq.{user}"
+        rows = sb_get("infra_trades", query)
+        return jsonify(rows)
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+
+@app.route("/api/trades/performance")
+@require_auth
+def get_trades_performance():
+    """Compute win rate and total P&L from closed trades."""
+    user = request.args.get("user", "")
+    try:
+        query = "?select=*&status=eq.closed&order=opened_at.desc&limit=200"
+        if user:
+            query += f"&user_name=eq.{user}"
+        rows = sb_get("infra_trades", query)
+
+        if not rows:
+            return jsonify({"win_rate": 0, "total_pnl": 0, "total_trades": 0,
+                            "wins": 0, "losses": 0, "avg_pnl": 0})
+
+        wins = [r for r in rows if (r.get("pnl") or 0) > 0]
+        losses = [r for r in rows if (r.get("pnl") or 0) <= 0]
+        total_pnl = sum(r.get("pnl") or 0 for r in rows)
+        win_rate = len(wins) / len(rows) * 100 if rows else 0
+        avg_pnl = total_pnl / len(rows) if rows else 0
+
+        return jsonify({
+            "win_rate": round(win_rate, 1),
+            "total_pnl": round(total_pnl, 2),
+            "total_trades": len(rows),
+            "wins": len(wins),
+            "losses": len(losses),
+            "avg_pnl": round(avg_pnl, 2),
+        })
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+
+@app.route("/api/intelligence/report")
+def intelligence_report():
+    """Summary report: regime + top opportunities. No auth required."""
+    if not _INTELLIGENCE_AVAILABLE:
+        return jsonify({"error": "intelligence module not available"}), 503
+    try:
+        regime = intelligence.get_macro_regime()
+        cached = _intel_scan_cache.get("scan")
+        opportunities = cached["data"][:10] if cached else []
+        return jsonify({
+            "regime": regime,
+            "top_opportunities": opportunities,
+            "generated_at": datetime.now(CST).isoformat(),
+        })
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+
+# ── Background Intelligence Scanner ──────────────────────────────────────────
+
+def _background_scanner():
+    """Daemon thread: scan for opportunities every 5min during market hours."""
+    import pytz
+    ET = pytz.timezone("America/New_York")
+
+    while True:
+        try:
+            now_et = datetime.now(ET)
+            is_weekday = now_et.weekday() < 5
+            market_open = now_et.replace(hour=9, minute=25, second=0, microsecond=0)
+            market_close = now_et.replace(hour=16, minute=5, second=0, microsecond=0)
+            is_market_hours = market_open <= now_et <= market_close
+
+            if _INTELLIGENCE_AVAILABLE and is_weekday and is_market_hours:
+                try:
+                    wl = sb_get("infra_watchlist", "?select=symbol&active=eq.true")
+                    watchlist = [r["symbol"] for r in wl]
+                    results = intelligence.hunt_opportunities(watchlist)
+                    _intel_scan_cache["scan"] = {"data": results, "ts": time.time()}
+                    print(f"[InfraAlpha] Background scan: {len(results)} opportunities found")
+
+                    # Log HIGH conviction signals to Supabase
+                    for sig in results:
+                        if sig.get("conviction") == "HIGH":
+                            paper_trader.log_signal_to_supabase("bot", sig)
+                            _log_signal(
+                                sig["symbol"], "intelligence_signal",
+                                f"HIGH conviction: score={sig['score']}, "
+                                f"pattern={sig.get('candle',{}).get('pattern','none')}, "
+                                f"news={sig.get('news',{}).get('score',0)}",
+                                "bot"
+                            )
+                except Exception as e:
+                    print(f"[InfraAlpha] Background scan error: {e}")
+        except Exception as e:
+            print(f"[InfraAlpha] Background scanner outer error: {e}")
+
+        time.sleep(300)  # 5 minutes
+
+
 if __name__ == "__main__":
     print(f"[InfraAlpha] Starting on port {PORT} — Supabase backend")
     # Seed on startup if table empty
@@ -714,4 +930,9 @@ if __name__ == "__main__":
         seed_watchlist_if_empty()
     except Exception as e:
         print(f"[InfraAlpha] Seed error (non-fatal): {e}")
+    # Start background intelligence scanner
+    if _INTELLIGENCE_AVAILABLE:
+        scanner_thread = threading.Thread(target=_background_scanner, daemon=True, name="IntelScanner")
+        scanner_thread.start()
+        print("[InfraAlpha] Intelligence background scanner started")
     app.run(host="0.0.0.0", port=PORT, debug=False)
