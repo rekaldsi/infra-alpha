@@ -5,12 +5,10 @@ Persistence: Supabase (infra_watchlist + infra_signals tables)
 Same Supabase project as Solana Sniper: uxtlxgjuccodrxhoiswf
 """
 
-import json
 import os
 import time
 import threading
 from datetime import datetime, timezone
-from pathlib import Path
 from zoneinfo import ZoneInfo
 
 from alpaca_crypto import encrypt, decrypt
@@ -515,50 +513,37 @@ def add_signal():
 
 # ── Trader Accounts ───────────────────────────────────────────────────────────
 
-ACCOUNTS_FILE = Path(__file__).parent / "data" / "trader_accounts.json"
-
-
-DEFAULT_ACCOUNTS = {
-    "jerry": {
-        "user_name": "jerry",
-        "display_name": "Jerry",
-        "alpaca_key_id": None,
-        "alpaca_secret": None,
-        "mode": "paper",
-        "enabled": False,
-        "risk_pct": 2.0,
-        "max_position": 100,
-        "telegram_chat_id": "7638568632",
-        "connected": False
-    },
-    "frank": {
-        "user_name": "frank",
-        "display_name": "Frank",
-        "alpaca_key_id": None,
-        "alpaca_secret": None,
-        "mode": "paper",
-        "enabled": False,
-        "risk_pct": 2.0,
-        "max_position": 100,
-        "telegram_chat_id": None,
-        "connected": False
-    }
-}
-
 def _load_accounts() -> dict:
+    """Load all trader accounts from Supabase. Seeds defaults if table is empty."""
     try:
-        data = json.loads(ACCOUNTS_FILE.read_text())
-        if not data:
-            return DEFAULT_ACCOUNTS.copy()
-        return data
-    except Exception:
-        # File missing or corrupt — seed defaults and persist
-        _save_accounts(DEFAULT_ACCOUNTS)
-        return DEFAULT_ACCOUNTS.copy()
+        rows = sb_get("infra_trader_accounts", "?select=*&order=user_name")
+        if not rows:
+            # Seed defaults
+            defaults = [
+                {"user_name": "jerry", "display_name": "Jerry", "telegram_chat_id": "7638568632", "mode": "paper", "enabled": False, "risk_pct": 2.0, "max_position": 100, "connected": False},
+                {"user_name": "frank", "display_name": "Frank", "telegram_chat_id": None, "mode": "paper", "enabled": False, "risk_pct": 2.0, "max_position": 100, "connected": False},
+            ]
+            for d in defaults:
+                _upsert_account(d)
+            return {d["user_name"]: d for d in defaults}
+        return {row["user_name"]: row for row in rows}
+    except Exception as e:
+        app.logger.error(f"_load_accounts error: {e}")
+        return {}
 
 
-def _save_accounts(data: dict):
-    ACCOUNTS_FILE.write_text(json.dumps(data, indent=2))
+def _upsert_account(acct: dict):
+    """Upsert a single account record to Supabase."""
+    acct["updated_at"] = datetime.now(timezone.utc).isoformat()
+    headers = {**SB_HEADERS, "Prefer": "resolution=merge-duplicates,return=representation"}
+    r = httpx.post(
+        f"{SUPABASE_URL}/rest/v1/infra_trader_accounts",
+        headers=headers,
+        json=acct,
+        timeout=10
+    )
+    r.raise_for_status()
+    return r.json()
 
 
 def _key_hint(key_id: str) -> str:
@@ -636,7 +621,7 @@ def connect_account(user_name):
     accounts[user_name]["alpaca_secret"]  = encrypt(secret)
     accounts[user_name]["mode"]           = mode
     accounts[user_name]["connected"]      = True
-    _save_accounts(accounts)
+    _upsert_account(accounts[user_name])
 
     return jsonify({"success": True, "account": _mask_account(accounts[user_name])})
 
@@ -654,7 +639,7 @@ def disconnect_account(user_name):
     accounts[user_name]["alpaca_key_id"] = None
     accounts[user_name]["alpaca_secret"]  = None
     accounts[user_name]["connected"]      = False
-    _save_accounts(accounts)
+    _upsert_account(accounts[user_name])
 
     return jsonify({"success": True, "account": _mask_account(accounts[user_name])})
 
@@ -711,7 +696,7 @@ def update_account_settings(user_name):
     if "max_position" in data:
         acct["max_position"] = int(data["max_position"])
 
-    _save_accounts(accounts)
+    _upsert_account(accounts[user_name])
     return jsonify({"success": True, "account": _mask_account(acct)})
 
 
