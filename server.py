@@ -518,11 +518,43 @@ def add_signal():
 ACCOUNTS_FILE = Path(__file__).parent / "data" / "trader_accounts.json"
 
 
+DEFAULT_ACCOUNTS = {
+    "jerry": {
+        "user_name": "jerry",
+        "display_name": "Jerry",
+        "alpaca_key_id": None,
+        "alpaca_secret": None,
+        "mode": "paper",
+        "enabled": False,
+        "risk_pct": 2.0,
+        "max_position": 100,
+        "telegram_chat_id": "7638568632",
+        "connected": False
+    },
+    "frank": {
+        "user_name": "frank",
+        "display_name": "Frank",
+        "alpaca_key_id": None,
+        "alpaca_secret": None,
+        "mode": "paper",
+        "enabled": False,
+        "risk_pct": 2.0,
+        "max_position": 100,
+        "telegram_chat_id": None,
+        "connected": False
+    }
+}
+
 def _load_accounts() -> dict:
     try:
-        return json.loads(ACCOUNTS_FILE.read_text())
+        data = json.loads(ACCOUNTS_FILE.read_text())
+        if not data:
+            return DEFAULT_ACCOUNTS.copy()
+        return data
     except Exception:
-        return {}
+        # File missing or corrupt — seed defaults and persist
+        _save_accounts(DEFAULT_ACCOUNTS)
+        return DEFAULT_ACCOUNTS.copy()
 
 
 def _save_accounts(data: dict):
