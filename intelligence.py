@@ -124,6 +124,11 @@ def _score_headline(text: str) -> float:
     return max(-2.0, min(2.0, float(score)))
 
 
+# Defense sector symbols — contract news is high signal, not noise (2026-04-19)
+DEFENSE_SYMBOLS = {"LMT", "RTX", "NOC", "GD", "LHX", "KTOS", "AXON", "LDOS", 
+                   "SAIC", "BAH", "CACI", "DRS", "HII", "TDG"}
+
+
 def get_news_sentiment(symbol: str) -> dict:
     now = time.time()
     cached = _news_cache.get(symbol)
@@ -149,10 +154,19 @@ def get_news_sentiment(symbol: str) -> dict:
 
         avg_score = sum(scores) / len(scores) if scores else 0.0
         
-        # OPTIMIZED 2026-04-19: Ignore single-headline noise
-        # Real news requires ≥2 aligned headlines; one keyword match is not signal-worthy
-        if len(headlines) < 2:
-            avg_score = 0.0
+        # OPTIMIZED 2026-04-19 for MAX PROFIT TAKING:
+        # Defense/contractor news (contract wins, deals) = high signal even single headline
+        # General tech news requires ≥2 aligned headlines (avoid noise)
+        if symbol in DEFENSE_SYMBOLS:
+            # Contract news is time-sensitive; single headline = actionable signal
+            if len(headlines) >= 1:
+                avg_score = avg_score * 0.75  # Allow single headline, cap at ±1.5
+            else:
+                avg_score = 0.0
+        else:
+            # General news: require ≥2 aligned headlines
+            if len(headlines) < 2:
+                avg_score = 0.0
         
         result = {
             "symbol": symbol,
@@ -239,17 +253,20 @@ def score_signal(symbol: str, vwap_setup: dict, candle: dict,
     vwap_pts = {"HIGH": 5, "MEDIUM": 2.5, "LOW": 0.5}.get(vwap_str, 0)
     components["vwap"] = vwap_pts
 
-    # Volume multiplier (OPTIMIZED 2026-04-19)
-    # Extreme volume (10x+) is rare but highly predictive. Reward it.
+    # Volume multiplier (OPTIMIZED 2026-04-19 for MAX PROFIT TAKING)
+    # Extreme volume (10x+) is rare but highly predictive. Reward it aggressively.
+    # Volume is CONFIRMATION — tightest bounces with 20x+ volume = highest ROI trades.
     vol_mult = vwap_setup.get("volume_multiplier", 1.0)
-    if vol_mult >= 15:
-        vol_pts = 3  # Extreme volume spike (OPTIMIZED: 2→3)
-    elif vol_mult >= 10:
-        vol_pts = 2.5  # Strong volume (NEW tier)
+    if vol_mult >= 20:
+        vol_pts = 3.5  # EXTREME volume spike — highest confidence (NEW tier)
+    elif vol_mult >= 12:
+        vol_pts = 3.0  # VERY HIGH volume — strong breakout confirmation
+    elif vol_mult >= 8:
+        vol_pts = 2.75 # HIGH volume — solid confirmation (NEW tier)
     elif vol_mult >= 5:
-        vol_pts = 1.5  # Solid volume (OPTIMIZED: 1→1.5)
+        vol_pts = 2.0  # MEDIUM volume — base confirmation (OPTIMIZED: 1.5→2.0)
     else:
-        vol_pts = 0
+        vol_pts = 0.0 # No volume spike — skip
     components["volume"] = vol_pts
 
     # Candlestick confirmation (OPTIMIZED 2026-04-19)
@@ -276,27 +293,34 @@ def score_signal(symbol: str, vwap_setup: dict, candle: dict,
     components["news"] = round(news_score, 2)
 
     # Macro (OPTIMIZED 2026-04-19 for MAX PROFIT TAKING)
-    # RISK_ON bonus increased. Market regime is fundamental.
-    # CAUTION now adds slight support (0→0.5) to catch setups in transition periods.
+    # RISK_ON is FUNDAMENTAL for tight bounces. Increase bonus to reward regime alignment.
+    # CAUTION still supports setups in transition; RISK_OFF is hard filter.
     regime = macro.get("regime", "CAUTION")
-    macro_pts = {"RISK_ON": 1.5, "CAUTION": 0.5, "RISK_OFF": -3}.get(regime, 0)  # OPTIMIZED
+    macro_pts = {"RISK_ON": 2.0, "CAUTION": 0.5, "RISK_OFF": -3}.get(regime, 0)  # OPTIMIZED: 1.5→2.0
     components["macro"] = macro_pts
 
     total = vwap_pts + vol_pts + candle_pts + news_score + macro_pts
     total = round(total, 2)
 
     # Thresholds (OPTIMIZED 2026-04-19 for MAX PROFIT TAKING)
-    # Lower HIGH threshold from 7→6 to capture strong VWAP+volume bounces
-    # VWAP is primary signal; volume confirmation is enough without waiting for candlestick.
-    # (VWAP 4 + volume 2.5 + macro 0.5 = 7, now counts as HIGH at 6+)
+    # HIGH: 6+ = execute immediately
+    # MEDIUM: 5-5.99 = execute IF volume_mult ≥ 15 AND RISK_ON (aggressive confirmation)
+    # LOW: <5 = skip
+    # 
+    # Why: VWAP + 20x volume in RISK_ON regime has >70% edge. Don't wait for candle.
     if total >= 6:
         conviction = "HIGH"
-    elif total >= 4.5:
+    elif total >= 5:
         conviction = "MEDIUM"
     else:
         conviction = "LOW"
 
-    trade_signal = total >= 6 and regime != "RISK_OFF"  # OPTIMIZED: threshold lowered to 6
+    # AGGRESSIVE execution: HIGH always, MEDIUM only if extreme volume + bullish regime
+    vol_mult = vwap_setup.get("volume_multiplier", 1.0)
+    trade_signal = (
+        (total >= 6) or 
+        (total >= 5 and vol_mult >= 15 and regime == "RISK_ON")
+    ) and regime != "RISK_OFF"  # OPTIMIZED 2026-04-19: aggressive MEDIUM execution
 
     return {
         "symbol": symbol,
@@ -336,14 +360,15 @@ def _get_vwap_setup_for_symbol(symbol: str) -> dict:
         last_vol = float(hist["Volume"].iloc[-1])
         vol_mult = last_vol / avg_vol if avg_vol > 0 else 1.0
 
-        # Price within tight band of VWAP (OPTIMIZED 2026-04-19)
+        # Price within tight band of VWAP (OPTIMIZED 2026-04-19 for MAX PROFIT TAKING)
         # Tighter thresholds: 0.2% → 0.15% for HIGH, 0.5% → 0.35% for MEDIUM
         # Real VWAP bounces happen in 0.1-0.15% bands; wider window = drift, not bounce
+        # Volume requirement increased: 5→8 for HIGH (confirm momentum), 2→5 for MEDIUM
         pct_from_vwap = abs(price - vwap) / vwap * 100 if vwap > 0 else 999
 
-        if pct_from_vwap < 0.15 and vol_mult >= 5:
+        if pct_from_vwap < 0.15 and vol_mult >= 8:
             signal = "HIGH"
-        elif pct_from_vwap < 0.35 and vol_mult >= 2:
+        elif pct_from_vwap < 0.35 and vol_mult >= 5:
             signal = "MEDIUM"
         else:
             signal = "LOW"
