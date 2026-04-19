@@ -552,6 +552,33 @@
       </div>
     </div>
     <div class="bias-pill bias-balanced" id="m-bias">Loading…</div>
+    <div class="macro-divider" style="height:1px;background:#1a1a1a;margin:8px 0"></div>
+    <div class="macro-metrics" style="gap:20px">
+      <div class="macro-item">
+        <div class="macro-label">REGIME</div>
+        <div id="regime-badge" class="regime-badge caution" style="font-size:11px;padding:3px 10px;margin-top:2px" title="Auto-computed from VIX + SPY trend. Controls auto-trading.">— LOADING</div>
+      </div>
+      <div class="macro-divider"></div>
+      <div class="macro-item">
+        <div class="macro-label">Win Rate</div>
+        <div class="macro-value" id="macro-winrate" style="color:var(--green)">—</div>
+      </div>
+      <div class="macro-divider"></div>
+      <div class="macro-item">
+        <div class="macro-label">Total P&amp;L</div>
+        <div class="macro-value" id="macro-pnl">—</div>
+      </div>
+      <div class="macro-divider"></div>
+      <div class="macro-item">
+        <div class="macro-label">Open Trades</div>
+        <div class="macro-value" id="macro-open-trades">—</div>
+      </div>
+      <div class="macro-divider"></div>
+      <div class="macro-item">
+        <div class="macro-label">Avg Score</div>
+        <div class="macro-value" id="macro-avg-score">—</div>
+      </div>
+    </div>
   </div>
 
   <!-- VWAP GUIDE MODAL -->
@@ -630,7 +657,7 @@
   <div class="section">
     <div class="section-header watchlist-header">
       <span>📈</span>
-      <span class="section-title">Frank's Watchlist — Data Center Infra</span>
+      <span class="section-title">InfraAlpha Watchlist</span>
       <span class="section-meta" id="wl-meta">T1=Core · T2=Strong · T3=REIT · T4=Watch · Refreshes every 60s</span>
     </div>
     <!-- Category Filter Buttons -->
@@ -730,44 +757,13 @@
     </div>
   </div>
 
-  <!-- PERFORMANCE DASHBOARD -->
+  <!-- TRADE HISTORY -->
   <div class="section">
-    <div class="section-header perf-header">
-      <span>📊</span>
-      <span class="section-title">Performance Dashboard</span>
-      <div style="display:flex;align-items:center;gap:10px;margin-left:auto">
-        <div id="regime-badge-wrap">
-          <span class="regime-badge caution" id="regime-badge">— REGIME</span>
-        </div>
-        <span class="section-meta" style="margin-left:0" id="perf-refresh-meta">Auto-refreshes every 30s</span>
-      </div>
+    <div class="section-header">
+      <span>📋</span>
+      <span class="section-title">Trade History</span>
+      <span class="section-meta" style="margin-left:auto" id="perf-refresh-meta">Auto-refreshes every 30s</span>
     </div>
-
-    <!-- Stats Row -->
-    <div class="perf-stats-row" id="perf-stats-row">
-      <div class="perf-stat">
-        <div class="perf-stat-label">Win Rate</div>
-        <div class="perf-stat-value" id="perf-win-rate" style="color:var(--green)">—</div>
-        <div class="perf-stat-sub" id="perf-wins-losses">— wins / — losses</div>
-      </div>
-      <div class="perf-stat">
-        <div class="perf-stat-label">Total P&amp;L</div>
-        <div class="perf-stat-value" id="perf-total-pnl">—</div>
-        <div class="perf-stat-sub" id="perf-total-trades">— closed trades</div>
-      </div>
-      <div class="perf-stat">
-        <div class="perf-stat-label">Avg P&amp;L / Trade</div>
-        <div class="perf-stat-value" id="perf-avg-pnl">—</div>
-        <div class="perf-stat-sub">per closed trade</div>
-      </div>
-      <div class="perf-stat">
-        <div class="perf-stat-label">VIX (Intelligence)</div>
-        <div class="perf-stat-value" id="perf-vix">—</div>
-        <div class="perf-stat-sub" id="perf-spy-trend">SPY trend: —</div>
-      </div>
-    </div>
-
-    <!-- Last 10 Trades Table -->
     <div class="trades-table" id="trades-table">
       <div class="trades-table-header">
         <span>Symbol</span>
@@ -779,7 +775,7 @@
         <span>Status</span>
       </div>
       <div id="trades-table-body">
-        <div class="trades-empty">Loading trade history…</div>
+        <div class="trades-empty">No trades yet — dry run starts Monday open</div>
       </div>
     </div>
   </div>
@@ -1064,7 +1060,7 @@
     document.querySelectorAll('.wl-filter-btn').forEach(btn => {
       btn.classList.toggle('active', btn.dataset.filter === filter)
     })
-    document.querySelectorAll('.stock-card').forEach(card => {
+    document.querySelectorAll('#watchlist-grid .stock-card').forEach(card => {
       card.style.display = (filter === 'all' || card.dataset.category === filter) ? '' : 'none'
     })
   }
@@ -1405,29 +1401,19 @@
 
       const fmt = v => (v >= 0 ? '+' : '') + '$' + Math.abs(v).toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2})
 
-      const winRateEl = document.getElementById('perf-win-rate')
-      if (winRateEl) {
-        winRateEl.textContent = d.win_rate.toFixed(1) + '%'
-        winRateEl.style.color = d.win_rate >= 50 ? 'var(--green)' : 'var(--red)'
-      }
+      // Update macro bar stats
+      const wrEl = document.getElementById('macro-winrate')
+      if (wrEl) { wrEl.textContent = d.win_rate.toFixed(1) + '%'; wrEl.style.color = d.win_rate >= 50 ? 'var(--green)' : 'var(--red)' }
 
-      const wlEl = document.getElementById('perf-wins-losses')
-      if (wlEl) wlEl.textContent = `${d.wins} wins / ${d.losses} losses`
+      const mpEl = document.getElementById('macro-pnl')
+      if (mpEl) { mpEl.textContent = fmt(d.total_pnl); mpEl.style.color = d.total_pnl >= 0 ? 'var(--green)' : 'var(--red)' }
 
-      const pnlEl = document.getElementById('perf-total-pnl')
-      if (pnlEl) {
-        pnlEl.textContent = fmt(d.total_pnl)
-        pnlEl.style.color = d.total_pnl >= 0 ? 'var(--green)' : 'var(--red)'
-      }
+      const otEl = document.getElementById('macro-open-trades')
+      if (otEl) otEl.textContent = (d.open_trades ?? 0)
 
-      const ttEl = document.getElementById('perf-total-trades')
-      if (ttEl) ttEl.textContent = `${d.total_trades} closed trades`
+      const asEl = document.getElementById('macro-avg-score')
+      if (asEl) asEl.textContent = d.avg_score ? d.avg_score.toFixed(1) : '—'
 
-      const avgEl = document.getElementById('perf-avg-pnl')
-      if (avgEl) {
-        avgEl.textContent = fmt(d.avg_pnl)
-        avgEl.style.color = d.avg_pnl >= 0 ? 'var(--green)' : 'var(--red)'
-      }
     } catch(e) { /* non-fatal */ }
   }
 
