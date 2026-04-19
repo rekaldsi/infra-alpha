@@ -19,6 +19,15 @@ import httpx
 from flask import Flask, jsonify, request, send_from_directory, render_template
 from flask_cors import CORS
 
+# Intelligence engine (imported after app init to avoid circular issues)
+try:
+    import intelligence
+    import paper_trader
+    _INTELLIGENCE_AVAILABLE = True
+except ImportError as _ie:
+    _INTELLIGENCE_AVAILABLE = False
+    print(f"[InfraAlpha] Intelligence engine not available: {_ie}")
+
 app = Flask(__name__, template_folder="templates", static_folder="static")
 app.config["MAX_CONTENT_LENGTH"] = 16 * 1024  # 16KB max request body
 
@@ -61,58 +70,68 @@ def sb_delete(path):
 
 # ── Seed watchlist if empty ───────────────────────────────────────────────────
 STARTER_WATCHLIST = [
-    # TIER 1 — Highest Conviction
-    {"symbol":"VRT",   "added_by":"Frank",  "notes":"TIER 1 — Vertiv. Pure-play power/cooling for DC. $15B backlog, 252% YoY order growth."},
-    {"symbol":"GEV",   "added_by":"Frank",  "notes":"TIER 1 — GE Vernova. $150B backlog, largest turbine base. Grid cannot power AI without them."},
-    {"symbol":"CMI",   "added_by":"Frank",  "notes":"TIER 1 — Cummins. #1 EBITDA 22%+, order book locked to 2028. Boring and dominant."},
-    {"symbol":"ETN",   "added_by":"Frank",  "notes":"TIER 1 — Eaton. Power mgmt + liquid cooling (Boyd acquisition). Infrastructure backbone."},
-    {"symbol":"MOD",   "added_by":"Frank",  "notes":"TIER 1 — Modine. Small cap, pure thermal mgmt for DC. Higher R/R vs ETN/VRT."},
-    {"symbol":"ABBNY", "added_by":"Frank",  "notes":"TIER 1 — ABB Ltd ADR (ABBNY). Electrification & automation. Deep data center exposure. US-tradeable ADR."},
-    {"symbol":"TT",    "added_by":"Frank",  "notes":"TIER 1 — Trane Technologies. HVAC/cooling. $7.8B backlog, 120%+ applied bookings."},
-    {"symbol":"NVT",   "added_by":"Frank",  "notes":"TIER 1 — nVent Electric. Enclosures, thermal mgmt, electrical infra for DC."},
-    # TIER 2 — Strong but diluted
-    {"symbol":"GNRC",  "added_by":"Frank",  "notes":"TIER 2 — Generac. DC backlog doubled, C&I +30% 2026. Still has residential DNA."},
-    {"symbol":"CAT",   "added_by":"Frank",  "notes":"TIER 2 — Caterpillar. DC revenue doubling. Diversified = slower upside."},
-    {"symbol":"HON",   "added_by":"Frank",  "notes":"TIER 2 — Honeywell. Building automation + industrial. Steady, not high-beta."},
-    {"symbol":"JCI",   "added_by":"Frank",  "notes":"TIER 2 — Johnson Controls. Building automation, HVAC, fire/security. Solid."},
-    {"symbol":"FIX",   "added_by":"Frank",  "notes":"TIER 2 — Comfort Systems. Under radar mech/electrical contractor. Heavy DC buildout."},
-    {"symbol":"SBGSF", "added_by":"Frank",  "notes":"TIER 2 — Schneider Electric. Energy mgmt. Global DC standard. OTC, watch liquidity."},
-    {"symbol":"SIEGY", "added_by":"Frank",  "notes":"TIER 2 — Siemens AG ADR (SIEGY). Building automation, industrial, energy. US-tradeable ADR of SIE.DE."},
-    {"symbol":"ATLKY", "added_by":"Frank",  "notes":"TIER 2 — Atlas Copco. Compressors, vacuum tech, power gen. OTC."},
-    {"symbol":"FTV",   "added_by":"Frank",  "notes":"TIER 2 — Fortive. Industrial tech, sensors, facility instrumentation."},
-    {"symbol":"APG",   "added_by":"Frank",  "notes":"TIER 2 — API Group. Fire protection, safety, HVAC services."},
-    {"symbol":"MSA",   "added_by":"Frank",  "notes":"TIER 2 — MSA Safety. Safety equipment, gas detection, facility monitoring."},
-    # TIER 3 — REIT / Facility
-    {"symbol":"DLR",   "added_by":"Frank",  "notes":"TIER 3 — Digital Realty. Colocation REIT. Rate cuts = tailwind."},
-    {"symbol":"CBRE",  "added_by":"Frank",  "notes":"TIER 3 — CBRE Group. Largest CRE firm, deep DC portfolio."},
-    {"symbol":"JLL",   "added_by":"Frank",  "notes":"TIER 3 — Jones Lang LaSalle. Facility mgmt for DC operators."},
-    {"symbol":"CWK",   "added_by":"Frank",  "notes":"TIER 3 — Cushman & Wakefield. DC facility mgmt. Indirect."},
-    # TIER 4 — Watch
-    {"symbol":"CARR",  "added_by":"Frank",  "notes":"TIER 4 — Carrier. 50% residential dilution. Watch only."},
-    {"symbol":"SNDK",  "added_by":"Frank",  "notes":"TIER 4 — SanDisk. Post-WD spinoff. Still forming. Watch."},
+    # TIER 1 — Highest Conviction (Data Center)
+    {"symbol":"VRT",   "added_by":"Frank",  "category":"data-center",     "added_by_user":"frank",  "notes":"TIER 1 — Vertiv. Pure-play power/cooling for DC. $15B backlog, 252% YoY order growth."},
+    {"symbol":"GEV",   "added_by":"Frank",  "category":"data-center",     "added_by_user":"frank",  "notes":"TIER 1 — GE Vernova. $150B backlog, largest turbine base. Grid cannot power AI without them."},
+    {"symbol":"CMI",   "added_by":"Frank",  "category":"data-center",     "added_by_user":"frank",  "notes":"TIER 1 — Cummins. #1 EBITDA 22%+, order book locked to 2028. Boring and dominant."},
+    {"symbol":"ETN",   "added_by":"Frank",  "category":"data-center",     "added_by_user":"frank",  "notes":"TIER 1 — Eaton. Power mgmt + liquid cooling (Boyd acquisition). Infrastructure backbone."},
+    {"symbol":"MOD",   "added_by":"Frank",  "category":"data-center",     "added_by_user":"frank",  "notes":"TIER 1 — Modine. Small cap, pure thermal mgmt for DC. Higher R/R vs ETN/VRT."},
+    {"symbol":"TT",    "added_by":"Frank",  "category":"data-center",     "added_by_user":"frank",  "notes":"TIER 1 — Trane Technologies. HVAC/cooling. $7.8B backlog, 120%+ applied bookings."},
+    {"symbol":"NVT",   "added_by":"Frank",  "category":"data-center",     "added_by_user":"frank",  "notes":"TIER 1 — nVent Electric. Enclosures, thermal mgmt, electrical infra for DC."},
+    # TIER 2 — Strong but diluted (Data Center)
+    {"symbol":"GNRC",  "added_by":"Frank",  "category":"data-center",     "added_by_user":"frank",  "notes":"TIER 2 — Generac. DC backlog doubled, C&I +30% 2026. Still has residential DNA."},
+    {"symbol":"CAT",   "added_by":"Frank",  "category":"data-center",     "added_by_user":"frank",  "notes":"TIER 2 — Caterpillar. DC revenue doubling. Diversified = slower upside."},
+    {"symbol":"HON",   "added_by":"Frank",  "category":"data-center",     "added_by_user":"frank",  "notes":"TIER 2 — Honeywell. Building automation + industrial. Steady, not high-beta."},
+    {"symbol":"JCI",   "added_by":"Frank",  "category":"data-center",     "added_by_user":"frank",  "notes":"TIER 2 — Johnson Controls. Building automation, HVAC, fire/security. Solid."},
+    {"symbol":"FIX",   "added_by":"Frank",  "category":"data-center",     "added_by_user":"frank",  "notes":"TIER 2 — Comfort Systems. Under radar mech/electrical contractor. Heavy DC buildout."},
+    {"symbol":"SBGSF", "added_by":"Frank",  "category":"data-center",     "added_by_user":"frank",  "notes":"TIER 2 — Schneider Electric. Energy mgmt. Global DC standard. OTC, watch liquidity."},
+    {"symbol":"SIEGY", "added_by":"Frank",  "category":"data-center",     "added_by_user":"frank",  "notes":"TIER 2 — Siemens AG ADR (SIEGY). Building automation, industrial, energy. US-tradeable ADR of SIE.DE."},
+    {"symbol":"ATLKY", "added_by":"Frank",  "category":"data-center",     "added_by_user":"frank",  "notes":"TIER 2 — Atlas Copco. Compressors, vacuum tech, power gen. OTC."},
+    {"symbol":"FTV",   "added_by":"Frank",  "category":"data-center",     "added_by_user":"frank",  "notes":"TIER 2 — Fortive. Industrial tech, sensors, facility instrumentation."},
+    {"symbol":"APG",   "added_by":"Frank",  "category":"data-center",     "added_by_user":"frank",  "notes":"TIER 2 — API Group. Fire protection, safety, HVAC services."},
+    {"symbol":"MSA",   "added_by":"Frank",  "category":"data-center",     "added_by_user":"frank",  "notes":"TIER 2 — MSA Safety. Safety equipment, gas detection, facility monitoring."},
+    # TIER 3 — REIT / Facility (Data Center)
+    {"symbol":"DLR",   "added_by":"Frank",  "category":"data-center",     "added_by_user":"frank",  "notes":"TIER 3 — Digital Realty. Colocation REIT. Rate cuts = tailwind."},
+    {"symbol":"CBRE",  "added_by":"Frank",  "category":"data-center",     "added_by_user":"frank",  "notes":"TIER 3 — CBRE Group. Largest CRE firm, deep DC portfolio."},
+    {"symbol":"JLL",   "added_by":"Frank",  "category":"data-center",     "added_by_user":"frank",  "notes":"TIER 3 — Jones Lang LaSalle. Facility mgmt for DC operators."},
+    {"symbol":"CWK",   "added_by":"Frank",  "category":"data-center",     "added_by_user":"frank",  "notes":"TIER 3 — Cushman & Wakefield. DC facility mgmt. Indirect."},
+    {"symbol":"CARR",  "added_by":"Frank",  "category":"data-center",     "added_by_user":"frank",  "notes":"TIER 4 — Carrier. 50% residential dilution. Watch only."},
+    # Defense
+    {"symbol":"LMT",   "added_by":"Frank",  "category":"defense",         "added_by_user":"frank",  "notes":"Defense — Lockheed Martin. Largest US defense contractor. F-35, missiles, space."},
+    {"symbol":"RTX",   "added_by":"Frank",  "category":"defense",         "added_by_user":"frank",  "notes":"Defense — RTX (Raytheon). Missiles, avionics, Pratt & Whitney engines."},
+    {"symbol":"NOC",   "added_by":"Frank",  "category":"defense",         "added_by_user":"frank",  "notes":"Defense — Northrop Grumman. B-21 stealth bomber, space, cyber."},
+    {"symbol":"GD",    "added_by":"Frank",  "category":"defense",         "added_by_user":"frank",  "notes":"Defense — General Dynamics. Gulfstream + combat systems + IT."},
+    {"symbol":"LHX",   "added_by":"Frank",  "category":"defense",         "added_by_user":"frank",  "notes":"Defense — L3Harris Technologies. Comms, ISR, electronic warfare."},
+    {"symbol":"KTOS",  "added_by":"Frank",  "category":"defense",         "added_by_user":"frank",  "notes":"Defense — Kratos Defense. Drones, hypersonics, satellite tech."},
+    {"symbol":"AXON",  "added_by":"Frank",  "category":"defense",         "added_by_user":"frank",  "notes":"Defense — Axon Enterprise. Less-lethal weapons, Taser, body cams."},
+    {"symbol":"LDOS",  "added_by":"Frank",  "category":"defense",         "added_by_user":"frank",  "notes":"Defense — Leidos Holdings. IT/defense services. Major government contractor."},
+    {"symbol":"SAIC",  "added_by":"Frank",  "category":"defense",         "added_by_user":"frank",  "notes":"Defense — Science Applications International. Defense IT and analytics."},
+    {"symbol":"BAH",   "added_by":"Frank",  "category":"defense",         "added_by_user":"frank",  "notes":"Defense — Booz Allen Hamilton. Government consulting and defense tech."},
     # Frank's Portfolio
-    {"symbol":"COIN",  "added_by":"Frank",  "notes":"Frank's Portfolio — Coinbase. Crypto exchange."},
-    # ABBNY already listed under TIER 1 above
-    {"symbol":"UROY",  "added_by":"Frank",  "notes":"Frank's Portfolio — Uranium Royalty Corp. Nuclear energy."},
-    {"symbol":"BP",    "added_by":"Frank",  "notes":"Frank's Portfolio — BP plc. Oil major. Energy macro hedge."},
-    {"symbol":"ANET",  "added_by":"Frank",  "notes":"Frank's Portfolio — Arista Networks. AI networking infra."},
-    {"symbol":"ICHR",  "added_by":"Frank",  "notes":"Frank's Portfolio — Ichor Holdings. Chip fab supply chain."},
-    {"symbol":"SII",   "added_by":"Frank",  "notes":"Frank's Portfolio — Sprott Inc. Precious metals/uranium funds."},
-    {"symbol":"VOO",   "added_by":"Frank",  "notes":"Frank's Portfolio — Vanguard S&P 500 ETF."},
-    {"symbol":"VIG",   "added_by":"Frank",  "notes":"Frank's Portfolio — Vanguard Dividend Appreciation ETF."},
-    {"symbol":"AGG",   "added_by":"Frank",  "notes":"Frank's Portfolio — iShares US Aggregate Bond ETF."},
-    {"symbol":"AMD",   "added_by":"Frank",  "notes":"Frank's Portfolio — Advanced Micro Devices. AI chips, GPU."},
-    {"symbol":"ET",    "added_by":"Frank",  "notes":"Frank's Portfolio — Energy Transfer LP. Midstream pipeline."},
-    {"symbol":"NVDA",  "added_by":"Frank",  "notes":"Frank's Portfolio — NVIDIA. AI chips, GPU compute bellwether."},
-    {"symbol":"ONDS",  "added_by":"Frank",  "notes":"Frank's Portfolio — Ondas Holdings. Autonomous drone/rail tech."},
-    {"symbol":"RNMBY", "added_by":"Frank",  "notes":"Frank's Portfolio — Rheinmetall AG ADR. German defense/auto."},
-    {"symbol":"GLD",   "added_by":"Frank",  "notes":"Frank's Portfolio — SPDR Gold Trust. Gold hedge."},
-    {"symbol":"UEC",   "added_by":"Frank",  "notes":"Frank's Portfolio — Uranium Energy Corp. Nuclear energy."},
-    {"symbol":"BNS",   "added_by":"Frank",  "notes":"Frank's Portfolio — Bank of Nova Scotia. Dividend income."},
-    {"symbol":"VTI",   "added_by":"Frank",  "notes":"Frank's Portfolio — Vanguard US Total Stock Market ETF."},
-    # Benchmarks
-    {"symbol":"SPY",   "added_by":"System", "notes":"Benchmark — S&P 500"},
-    {"symbol":"QQQ",   "added_by":"System", "notes":"Benchmark — Nasdaq 100"},
+    {"symbol":"COIN",  "added_by":"Frank",  "category":"frank-portfolio", "added_by_user":"frank",  "notes":"Frank's Portfolio — Coinbase. Crypto exchange."},
+    {"symbol":"ABBNY", "added_by":"Frank",  "category":"frank-portfolio", "added_by_user":"frank",  "notes":"Frank's Portfolio — ABB Ltd ADR (ABBNY). Electrification & automation. US-tradeable ADR."},
+    {"symbol":"UROY",  "added_by":"Frank",  "category":"frank-portfolio", "added_by_user":"frank",  "notes":"Frank's Portfolio — Uranium Royalty Corp. Nuclear energy."},
+    {"symbol":"BP",    "added_by":"Frank",  "category":"frank-portfolio", "added_by_user":"frank",  "notes":"Frank's Portfolio — BP plc. Oil major. Energy macro hedge."},
+    {"symbol":"ANET",  "added_by":"Frank",  "category":"frank-portfolio", "added_by_user":"frank",  "notes":"Frank's Portfolio — Arista Networks. AI networking infra."},
+    {"symbol":"ICHR",  "added_by":"Frank",  "category":"frank-portfolio", "added_by_user":"frank",  "notes":"Frank's Portfolio — Ichor Holdings. Chip fab supply chain."},
+    {"symbol":"SII",   "added_by":"Frank",  "category":"frank-portfolio", "added_by_user":"frank",  "notes":"Frank's Portfolio — Sprott Inc. Precious metals/uranium funds."},
+    {"symbol":"VOO",   "added_by":"Frank",  "category":"frank-portfolio", "added_by_user":"frank",  "notes":"Frank's Portfolio — Vanguard S&P 500 ETF."},
+    {"symbol":"VIG",   "added_by":"Frank",  "category":"frank-portfolio", "added_by_user":"frank",  "notes":"Frank's Portfolio — Vanguard Dividend Appreciation ETF."},
+    {"symbol":"AGG",   "added_by":"Frank",  "category":"frank-portfolio", "added_by_user":"frank",  "notes":"Frank's Portfolio — iShares US Aggregate Bond ETF."},
+    {"symbol":"AMD",   "added_by":"Frank",  "category":"frank-portfolio", "added_by_user":"frank",  "notes":"Frank's Portfolio — Advanced Micro Devices. AI chips, GPU."},
+    {"symbol":"ET",    "added_by":"Frank",  "category":"frank-portfolio", "added_by_user":"frank",  "notes":"Frank's Portfolio — Energy Transfer LP. Midstream pipeline."},
+    {"symbol":"NVDA",  "added_by":"Frank",  "category":"frank-portfolio", "added_by_user":"frank",  "notes":"Frank's Portfolio — NVIDIA. AI chips, GPU compute bellwether."},
+    {"symbol":"ONDS",  "added_by":"Frank",  "category":"frank-portfolio", "added_by_user":"frank",  "notes":"Frank's Portfolio — Ondas Holdings. Autonomous drone/rail tech."},
+    {"symbol":"RNMBY", "added_by":"Frank",  "category":"frank-portfolio", "added_by_user":"frank",  "notes":"Frank's Portfolio — Rheinmetall AG ADR. German defense/auto."},
+    {"symbol":"GLD",   "added_by":"Frank",  "category":"frank-portfolio", "added_by_user":"frank",  "notes":"Frank's Portfolio — SPDR Gold Trust. Gold hedge."},
+    {"symbol":"UEC",   "added_by":"Frank",  "category":"frank-portfolio", "added_by_user":"frank",  "notes":"Frank's Portfolio — Uranium Energy Corp. Nuclear energy."},
+    {"symbol":"BNS",   "added_by":"Frank",  "category":"frank-portfolio", "added_by_user":"frank",  "notes":"Frank's Portfolio — Bank of Nova Scotia. Dividend income."},
+    {"symbol":"VTI",   "added_by":"Frank",  "category":"frank-portfolio", "added_by_user":"frank",  "notes":"Frank's Portfolio — Vanguard US Total Stock Market ETF."},
+    # Jerry's Picks
+    {"symbol":"SNDK",  "added_by":"Jerry",  "category":"jerry-picks",     "added_by_user":"jerry",  "notes":"Jerry's Pick — SanDisk. Post-WD spinoff. Still forming. Watch."},
+    # Indexes / Benchmarks
+    {"symbol":"SPY",   "added_by":"System", "category":"indexes",         "added_by_user":"system", "notes":"Benchmark — S&P 500"},
+    {"symbol":"QQQ",   "added_by":"System", "category":"indexes",         "added_by_user":"system", "notes":"Benchmark — Nasdaq 100"},
 ]
 
 def seed_watchlist_if_empty():
@@ -386,11 +405,13 @@ def add_to_watchlist():
         if existing:
             return jsonify({"error": f"{symbol} already in watchlist"}), 409
         entry = {
-            "symbol":   symbol,
-            "added_by": data.get("added_by", "Frank"),
-            "added_at": datetime.now(CST).isoformat(),
-            "notes":    data.get("notes", ""),
-            "active":   True,
+            "symbol":        symbol,
+            "added_by":      data.get("added_by", "Frank"),
+            "added_at":      datetime.now(CST).isoformat(),
+            "notes":         data.get("notes", ""),
+            "active":        True,
+            "category":      data.get("category", "general"),
+            "added_by_user": data.get("added_by_user", "frank"),
         }
         result = sb_post("infra_watchlist", entry)
         # Log to signals
@@ -450,17 +471,19 @@ def get_quote(symbol):
 @app.route("/api/quotes")
 def get_quotes():
     try:
-        wl = sb_get("infra_watchlist", "?select=symbol,notes,added_by&active=eq.true&order=sort_order.asc,added_at.asc")
+        wl = sb_get("infra_watchlist", "?select=symbol,notes,added_by,category,added_by_user&active=eq.true&order=sort_order.asc,added_at.asc")
         results = []
         for row in wl:
             sym = row["symbol"]
             q = fetch_quote(sym)
             v = fetch_vwap_setup(sym)
-            q["vwap_setup"] = v.get("setup", False)
-            q["vwap_grade"] = v.get("grade", "NONE")
-            q["vwap_price"] = v.get("vwap")
-            q["notes"]      = row.get("notes", "")
-            q["added_by"]   = row.get("added_by", "")
+            q["vwap_setup"]    = v.get("setup", False)
+            q["vwap_grade"]    = v.get("grade", "NONE")
+            q["vwap_price"]    = v.get("vwap")
+            q["notes"]         = row.get("notes", "")
+            q["added_by"]      = row.get("added_by", "")
+            q["category"]      = row.get("category", "general")
+            q["added_by_user"] = row.get("added_by_user", "frank")
             results.append(q)
         return jsonify(results)
     except Exception as e:
@@ -707,6 +730,208 @@ def index():
     return render_template("index.html", portal_token=PORTAL_API_TOKEN)
 
 
+# ── Intelligence Engine Endpoints ────────────────────────────────────────────
+
+_intel_scan_cache: dict = {}   # {"data": [...], "ts": float}
+_INTEL_SCAN_TTL = 5 * 60       # 5 minutes
+
+
+@app.route("/api/intelligence/scan")
+def intelligence_scan():
+    """Run opportunity scan across watchlist + expanded universe. Cached 5min."""
+    if not _INTELLIGENCE_AVAILABLE:
+        return jsonify({"error": "intelligence module not available"}), 503
+
+    now = time.time()
+    cached = _intel_scan_cache.get("scan")
+    if cached and (now - cached["ts"]) < _INTEL_SCAN_TTL:
+        return jsonify({"results": cached["data"], "cached": True,
+                        "age_sec": int(now - cached["ts"])})
+
+    try:
+        wl = sb_get("infra_watchlist", "?select=symbol&active=eq.true")
+        watchlist = [r["symbol"] for r in wl]
+        results = intelligence.hunt_opportunities(watchlist)
+        _intel_scan_cache["scan"] = {"data": results, "ts": now}
+        return jsonify({"results": results, "cached": False, "count": len(results)})
+    except Exception as e:
+        app.logger.error(f"Intelligence scan error: {e}")
+        return jsonify({"error": str(e)}), 500
+
+
+@app.route("/api/intelligence/regime")
+def intelligence_regime():
+    """Return current macro regime (RISK_ON / CAUTION / RISK_OFF). No auth."""
+    if not _INTELLIGENCE_AVAILABLE:
+        return jsonify({"error": "intelligence module not available"}), 503
+    try:
+        regime = intelligence.get_macro_regime()
+        return jsonify(regime)
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+
+@app.route("/api/intelligence/execute", methods=["POST"])
+@require_auth
+def intelligence_execute():
+    """Execute a paper trade for a given signal + user. Requires auth."""
+    if not _INTELLIGENCE_AVAILABLE:
+        return jsonify({"error": "intelligence module not available"}), 503
+
+    data = request.get_json() or {}
+    user_name = data.get("user_name", "").strip().lower()
+    signal = data.get("signal", {})
+
+    if not user_name or not signal:
+        return jsonify({"error": "user_name and signal required"}), 400
+
+    if not validate_user(user_name):
+        return jsonify({"error": "Invalid user"}), 404
+
+    accounts = _load_accounts()
+    if user_name not in accounts:
+        return jsonify({"error": "Account not found"}), 404
+
+    acct = accounts[user_name]
+    if not acct.get("connected") or not acct.get("alpaca_key_id") or not acct.get("alpaca_secret"):
+        return jsonify({"error": "Account not connected to Alpaca"}), 400
+
+    try:
+        api_key = decrypt(acct["alpaca_key_id"])
+        api_secret = decrypt(acct["alpaca_secret"])
+    except Exception:
+        return jsonify({"error": "Failed to decrypt API credentials"}), 500
+
+    account_for_trader = {
+        "api_key": api_key,
+        "api_secret": api_secret,
+        "enabled": acct.get("enabled", False),
+        "telegram_chat_id": acct.get("telegram_chat_id", ""),
+    }
+
+    # Add position sizing to signal if not present
+    if "shares" not in signal:
+        equity = data.get("equity", 100000.0)
+        risk_pct = acct.get("risk_pct", 2.0)
+        entry = signal.get("vwap_setup", {}).get("price", 0)
+        stop = signal.get("vwap_setup", {}).get("vwap", 0)
+        if entry > 0 and stop > 0 and stop < entry:
+            sizing = intelligence.calculate_position(equity, risk_pct, entry, stop)
+            signal.update(sizing)
+
+    result = paper_trader.execute_paper_trade(user_name, signal, account_for_trader)
+    return jsonify(result)
+
+
+@app.route("/api/trades")
+@require_auth
+def get_trades():
+    """Get recent trades from infra_trades table."""
+    limit = int(request.args.get("limit", 50))
+    user = request.args.get("user", "")
+    try:
+        query = f"?select=*&order=opened_at.desc&limit={limit}"
+        if user:
+            query += f"&user_name=eq.{user}"
+        rows = sb_get("infra_trades", query)
+        return jsonify(rows)
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+
+@app.route("/api/trades/performance")
+@require_auth
+def get_trades_performance():
+    """Compute win rate and total P&L from closed trades."""
+    user = request.args.get("user", "")
+    try:
+        query = "?select=*&status=eq.closed&order=opened_at.desc&limit=200"
+        if user:
+            query += f"&user_name=eq.{user}"
+        rows = sb_get("infra_trades", query)
+
+        if not rows:
+            return jsonify({"win_rate": 0, "total_pnl": 0, "total_trades": 0,
+                            "wins": 0, "losses": 0, "avg_pnl": 0})
+
+        wins = [r for r in rows if (r.get("pnl") or 0) > 0]
+        losses = [r for r in rows if (r.get("pnl") or 0) <= 0]
+        total_pnl = sum(r.get("pnl") or 0 for r in rows)
+        win_rate = len(wins) / len(rows) * 100 if rows else 0
+        avg_pnl = total_pnl / len(rows) if rows else 0
+
+        return jsonify({
+            "win_rate": round(win_rate, 1),
+            "total_pnl": round(total_pnl, 2),
+            "total_trades": len(rows),
+            "wins": len(wins),
+            "losses": len(losses),
+            "avg_pnl": round(avg_pnl, 2),
+        })
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+
+@app.route("/api/intelligence/report")
+def intelligence_report():
+    """Summary report: regime + top opportunities. No auth required."""
+    if not _INTELLIGENCE_AVAILABLE:
+        return jsonify({"error": "intelligence module not available"}), 503
+    try:
+        regime = intelligence.get_macro_regime()
+        cached = _intel_scan_cache.get("scan")
+        opportunities = cached["data"][:10] if cached else []
+        return jsonify({
+            "regime": regime,
+            "top_opportunities": opportunities,
+            "generated_at": datetime.now(CST).isoformat(),
+        })
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+
+# ── Background Intelligence Scanner ──────────────────────────────────────────
+
+def _background_scanner():
+    """Daemon thread: scan for opportunities every 5min during market hours."""
+    import pytz
+    ET = pytz.timezone("America/New_York")
+
+    while True:
+        try:
+            now_et = datetime.now(ET)
+            is_weekday = now_et.weekday() < 5
+            market_open = now_et.replace(hour=9, minute=25, second=0, microsecond=0)
+            market_close = now_et.replace(hour=16, minute=5, second=0, microsecond=0)
+            is_market_hours = market_open <= now_et <= market_close
+
+            if _INTELLIGENCE_AVAILABLE and is_weekday and is_market_hours:
+                try:
+                    wl = sb_get("infra_watchlist", "?select=symbol&active=eq.true")
+                    watchlist = [r["symbol"] for r in wl]
+                    results = intelligence.hunt_opportunities(watchlist)
+                    _intel_scan_cache["scan"] = {"data": results, "ts": time.time()}
+                    print(f"[InfraAlpha] Background scan: {len(results)} opportunities found")
+
+                    # Log HIGH conviction signals to Supabase
+                    for sig in results:
+                        if sig.get("conviction") == "HIGH":
+                            paper_trader.log_signal_to_supabase("bot", sig)
+                            _log_signal(
+                                sig["symbol"], "intelligence_signal",
+                                f"HIGH conviction: score={sig['score']}, "
+                                f"pattern={sig.get('candle',{}).get('pattern','none')}, "
+                                f"news={sig.get('news',{}).get('score',0)}",
+                                "bot"
+                            )
+                except Exception as e:
+                    print(f"[InfraAlpha] Background scan error: {e}")
+        except Exception as e:
+            print(f"[InfraAlpha] Background scanner outer error: {e}")
+
+        time.sleep(300)  # 5 minutes
+
+
 if __name__ == "__main__":
     print(f"[InfraAlpha] Starting on port {PORT} — Supabase backend")
     # Seed on startup if table empty
@@ -714,4 +939,9 @@ if __name__ == "__main__":
         seed_watchlist_if_empty()
     except Exception as e:
         print(f"[InfraAlpha] Seed error (non-fatal): {e}")
+    # Start background intelligence scanner
+    if _INTELLIGENCE_AVAILABLE:
+        scanner_thread = threading.Thread(target=_background_scanner, daemon=True, name="IntelScanner")
+        scanner_thread.start()
+        print("[InfraAlpha] Intelligence background scanner started")
     app.run(host="0.0.0.0", port=PORT, debug=False)
