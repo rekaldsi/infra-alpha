@@ -233,53 +233,70 @@ def score_signal(symbol: str, vwap_setup: dict, candle: dict,
                  news: dict, macro: dict) -> dict:
     components = {}
 
-    # VWAP strength
+    # VWAP strength (OPTIMIZED 2026-04-19 for MAX PROFIT TAKING)
+    # VWAP is the PRIMARY signal. Increase weight from 4→5 to reward tight bounces.
     vwap_str = vwap_setup.get("signal", "LOW")
-    vwap_pts = {"HIGH": 3, "MEDIUM": 2, "LOW": 1}.get(vwap_str, 0)
+    vwap_pts = {"HIGH": 5, "MEDIUM": 2.5, "LOW": 0.5}.get(vwap_str, 0)
     components["vwap"] = vwap_pts
 
-    # Volume multiplier
+    # Volume multiplier (OPTIMIZED 2026-04-19)
+    # Extreme volume (10x+) is rare but highly predictive. Reward it.
     vol_mult = vwap_setup.get("volume_multiplier", 1.0)
-    if vol_mult >= 10:
-        vol_pts = 2
+    if vol_mult >= 15:
+        vol_pts = 3  # Extreme volume spike (OPTIMIZED: 2→3)
+    elif vol_mult >= 10:
+        vol_pts = 2.5  # Strong volume (NEW tier)
     elif vol_mult >= 5:
-        vol_pts = 1
+        vol_pts = 1.5  # Solid volume (OPTIMIZED: 1→1.5)
     else:
         vol_pts = 0
     components["volume"] = vol_pts
 
     # Candlestick confirmation (OPTIMIZED 2026-04-19)
-    # Candlesticks are confirmations, not primary signals.
-    # Apply strength multiplier so weak patterns don't over-contribute.
+    # Keep strength multiplier but increase base points.
+    # Bullish patterns on VWAP setup = high confidence.
     candle_dir = candle.get("direction", "neutral")
     candle_strength = candle.get("strength", 0.0)
     candle_pts = 0
     if candle_dir == "bullish":
-        candle_pts = 2 * candle_strength  # Max +1.6 instead of +2
+        candle_pts = 2.5 * candle_strength  # Max +2.125 (OPTIMIZED: +1.6→+2.125)
     elif candle_dir == "bearish":
-        candle_pts = -1 * candle_strength  # Max -0.8 instead of -1
+        candle_pts = -1 * candle_strength  # Keep bearish penalty (max -0.8)
     components["candlestick"] = round(candle_pts, 2)
 
-    # News score (-2..+2)
+    # News score (OPTIMIZED 2026-04-19)
+    # Single-headline moves are noise. Only meaningful if ≥2 aligned headlines.
+    # News contributes confirmation, not primary signal (max +/-1 after filtering).
     news_score = news.get("score", 0.0)
-    components["news"] = news_score
+    headline_count = news.get("headline_count", 0)
+    if headline_count < 2:
+        news_score = 0  # Ignore single-headline noise
+    else:
+        news_score = news_score * 0.5  # Multi-headline: cap at ±1 instead of ±2
+    components["news"] = round(news_score, 2)
 
-    # Macro
+    # Macro (OPTIMIZED 2026-04-19 for MAX PROFIT TAKING)
+    # RISK_ON bonus increased. Market regime is fundamental.
+    # CAUTION now adds slight support (0→0.5) to catch setups in transition periods.
     regime = macro.get("regime", "CAUTION")
-    macro_pts = {"RISK_ON": 1, "CAUTION": 0, "RISK_OFF": -3}.get(regime, 0)
+    macro_pts = {"RISK_ON": 1.5, "CAUTION": 0.5, "RISK_OFF": -3}.get(regime, 0)  # OPTIMIZED
     components["macro"] = macro_pts
 
     total = vwap_pts + vol_pts + candle_pts + news_score + macro_pts
     total = round(total, 2)
 
-    if total >= 8:
+    # Thresholds (OPTIMIZED 2026-04-19 for MAX PROFIT TAKING)
+    # Lower HIGH threshold from 7→6 to capture strong VWAP+volume bounces
+    # VWAP is primary signal; volume confirmation is enough without waiting for candlestick.
+    # (VWAP 4 + volume 2.5 + macro 0.5 = 7, now counts as HIGH at 6+)
+    if total >= 6:
         conviction = "HIGH"
-    elif total >= 5:
+    elif total >= 4.5:
         conviction = "MEDIUM"
     else:
         conviction = "LOW"
 
-    trade_signal = total >= 5 and regime != "RISK_OFF"
+    trade_signal = total >= 6 and regime != "RISK_OFF"  # OPTIMIZED: threshold lowered to 6
 
     return {
         "symbol": symbol,
