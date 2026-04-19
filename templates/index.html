@@ -479,6 +479,74 @@
     .conviction-pill.LOW    { background: rgba(255,255,255,0.06); color: var(--muted2); }
     .trades-empty { padding: 28px; text-align: center; color: var(--muted); font-size: 13px; }
 
+    /* ── Nav Bar ── */
+    .nav-bar {
+      background: rgba(10,10,10,0.98);
+      backdrop-filter: blur(12px);
+      border-bottom: 1px solid var(--border);
+      position: sticky;
+      top: 62px;
+      z-index: 99;
+    }
+    .nav-tabs { display: flex; align-items: center; overflow-x: auto; scrollbar-width: none; }
+    .nav-tabs::-webkit-scrollbar { display: none; }
+    .nav-tab {
+      flex-shrink: 0; padding: 11px 18px; font-size: 12px; font-weight: 600;
+      color: var(--muted2); cursor: pointer;
+      border-bottom: 2px solid transparent;
+      border-top: none; border-left: none; border-right: none;
+      background: none; transition: color 0.15s, border-color 0.15s;
+      white-space: nowrap; letter-spacing: 0.2px;
+    }
+    .nav-tab:hover { color: var(--text); }
+    .nav-tab.active { color: var(--accent); border-bottom-color: var(--accent); }
+
+    /* ── Page Sections ── */
+    .page-section { display: none; }
+    .page-section.active { display: block; }
+
+    /* ── Positions Page ── */
+    .pos-user-toggle { display: flex; gap: 10px; margin-bottom: 20px; margin-top: 20px; }
+    .pos-user-btn {
+      padding: 7px 20px; border-radius: 20px;
+      border: 1px solid var(--border2); color: var(--muted2);
+      background: var(--card); cursor: pointer;
+      font-size: 12px; font-weight: 600; transition: all 0.15s;
+    }
+    .pos-user-btn.active { border-color: var(--accent); color: var(--accent); background: var(--accent-dim); }
+    .pos-summary-grid {
+      display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+      gap: 10px; margin-bottom: 20px;
+    }
+    .pos-summary-item {
+      background: var(--card); border: 1px solid var(--border);
+      border-radius: 10px; padding: 12px 14px;
+    }
+    .pos-summary-label { font-size: 9px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.6px; margin-bottom: 4px; }
+    .pos-summary-value { font-size: 16px; font-weight: 700; font-variant-numeric: tabular-nums; }
+    .pos-table {
+      background: var(--card); border: 1px solid var(--border);
+      border-radius: 12px; overflow: hidden; margin-bottom: 20px;
+    }
+    .pos-table-title {
+      padding: 12px 16px; border-bottom: 1px solid var(--border);
+      font-size: 12px; font-weight: 700; color: var(--muted2);
+      text-transform: uppercase; letter-spacing: 0.5px;
+    }
+    .pos-table-header {
+      display: grid; padding: 8px 16px; border-bottom: 1px solid var(--border);
+      font-size: 9px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.6px;
+    }
+    .pos-table-row {
+      display: grid; padding: 10px 16px; border-bottom: 1px solid var(--border);
+      font-size: 12px; align-items: center; transition: background 0.1s;
+    }
+    .pos-table-row:last-child { border-bottom: none; }
+    .pos-table-row:hover { background: rgba(255,255,255,0.02); }
+    .pos-open-cols   { grid-template-columns: 60px 50px 80px 80px 90px 85px 58px 46px; }
+    .pos-closed-cols { grid-template-columns: 65px 50px 50px 85px 120px 70px; }
+    .pos-empty { padding: 28px; text-align: center; color: var(--muted); font-size: 13px; }
+
     /* ── Responsive ── */
     @media (max-width: 640px) {
       .macro-bar { flex-direction: column; gap: 12px; padding: 14px 16px; align-items: stretch; }
@@ -497,6 +565,15 @@
       .trades-table-header span:nth-child(5),
       .trades-table-row span:nth-child(4),
       .trades-table-row span:nth-child(5) { display: none; }
+      .pos-open-cols { grid-template-columns: 60px 50px 85px 60px; }
+      .pos-open-cols span:nth-child(3),
+      .pos-open-cols span:nth-child(5),
+      .pos-open-cols span:nth-child(8) { display: none; }
+      .pos-closed-cols { grid-template-columns: 65px 50px 85px 85px; }
+      .pos-closed-cols span:nth-child(5),
+      .pos-closed-cols span:nth-child(6) { display: none; }
+      .pos-summary-grid { grid-template-columns: 1fr 1fr; }
+      .nav-tab { padding: 11px 13px; font-size: 11px; }
     }
   </style>
 </head>
@@ -517,6 +594,19 @@
         <div class="live-clock" id="clock">--:-- --</div>
         <button class="refresh-btn" onclick="refreshAll()">↻ Refresh</button>
       </div>
+    </div>
+  </div>
+</div>
+
+<!-- NAV BAR -->
+<div class="nav-bar">
+  <div class="container">
+    <div class="nav-tabs">
+      <button class="nav-tab active" id="nav-dashboard"    onclick="showPage('dashboard')">Dashboard</button>
+      <button class="nav-tab"        id="nav-watchlist"    onclick="showPage('watchlist')">Watchlist</button>
+      <button class="nav-tab"        id="nav-positions"    onclick="showPage('positions')">Positions</button>
+      <button class="nav-tab"        id="nav-trade-history" onclick="showPage('trade-history')">Trade History</button>
+      <button class="nav-tab"        id="nav-accounts"     onclick="showPage('accounts')">Accounts</button>
     </div>
   </div>
 </div>
@@ -565,7 +655,7 @@
       </div>
       <div class="macro-divider"></div>
       <div class="macro-item">
-        <div class="macro-label">Total P&amp;L</div>
+        <div class="macro-label">P&amp;L Today</div>
         <div class="macro-value" id="macro-pnl">—</div>
       </div>
       <div class="macro-divider"></div>
@@ -653,6 +743,9 @@
     </div>
   </div>
 
+  <!-- PAGE: WATCHLIST -->
+  <div id="page-watchlist" class="page-section">
+
   <!-- WATCHLIST -->
   <div class="section">
     <div class="section-header watchlist-header">
@@ -718,6 +811,11 @@
     </div>
   </div>
 
+  </div><!-- /page-watchlist -->
+
+  <!-- PAGE: DASHBOARD -->
+  <div id="page-dashboard" class="page-section active">
+
   <!-- VWAP SCAN -->
   <div class="section">
     <div class="section-header vwap-header">
@@ -745,19 +843,35 @@
     </div>
   </div>
 
-  <!-- ACCOUNTS -->
-  <div class="section">
-    <div class="section-header" style="background:rgba(0,255,136,0.05);border-left:3px solid #00ff88">
-      <span>⚙️</span>
-      <span class="section-title">Accounts</span>
-      <span class="section-meta">Alpaca API key management</span>
-    </div>
-    <div id="accounts-grid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:14px">
-      <div style="color:var(--muted);padding:20px;font-size:13px">Loading accounts…</div>
-    </div>
-  </div>
+  </div><!-- /page-dashboard -->
 
-  <!-- TRADE HISTORY -->
+  <!-- PAGE: POSITIONS -->
+  <div id="page-positions" class="page-section">
+    <div class="pos-user-toggle">
+      <button class="pos-user-btn active" id="pos-btn-jerry" onclick="selectPosUser('jerry')">Jerry</button>
+      <button class="pos-user-btn" id="pos-btn-frank" onclick="selectPosUser('frank')">Frank</button>
+    </div>
+    <div class="pos-summary-grid" id="pos-summary">
+      <div style="color:var(--muted);font-size:13px;grid-column:1/-1;padding:8px 0">Select a user to load account data.</div>
+    </div>
+    <div class="pos-table">
+      <div class="pos-table-title">Open Positions</div>
+      <div class="pos-table-header pos-open-cols">
+        <span>Symbol</span><span>Qty</span><span>Entry</span><span>Current</span><span>Mkt Value</span><span>Unrealized P&amp;L</span><span>%</span><span>Side</span>
+      </div>
+      <div id="pos-open-body"><div class="pos-empty">Loading…</div></div>
+    </div>
+    <div class="pos-table">
+      <div class="pos-table-title">Closed Orders</div>
+      <div class="pos-table-header pos-closed-cols">
+        <span>Symbol</span><span>Side</span><span>Qty</span><span>Fill Price</span><span>Filled At</span><span>Status</span>
+      </div>
+      <div id="pos-closed-body"><div class="pos-empty">Loading…</div></div>
+    </div>
+  </div><!-- /page-positions -->
+
+  <!-- PAGE: TRADE HISTORY -->
+  <div id="page-trade-history" class="page-section">
   <div class="section">
     <div class="section-header">
       <span>📋</span>
@@ -779,6 +893,21 @@
       </div>
     </div>
   </div>
+  </div><!-- /page-trade-history -->
+
+  <!-- PAGE: ACCOUNTS -->
+  <div id="page-accounts" class="page-section">
+  <div class="section">
+    <div class="section-header" style="background:rgba(0,255,136,0.05);border-left:3px solid #00ff88">
+      <span>⚙️</span>
+      <span class="section-title">Accounts</span>
+      <span class="section-meta">Alpaca API key management</span>
+    </div>
+    <div id="accounts-grid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:14px">
+      <div style="color:var(--muted);padding:20px;font-size:13px">Loading accounts…</div>
+    </div>
+  </div>
+  </div><!-- /page-accounts -->
 
   <!-- FOOTER -->
   <div class="footer">
@@ -793,6 +922,125 @@
   let _quotes = []
   let _vwap   = []
   let _macro  = {}
+  let _posUser = 'jerry'
+
+  // ── Page Navigation ───────────────────────────────────────────────────────
+  function showPage(name) {
+    document.querySelectorAll('.page-section').forEach(el => el.classList.remove('active'))
+    const pg = document.getElementById('page-' + name)
+    if (pg) pg.classList.add('active')
+    document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'))
+    const tab = document.getElementById('nav-' + name)
+    if (tab) tab.classList.add('active')
+    if (name === 'positions') loadPositionsData()
+    if (name === 'trade-history') loadPerformanceDashboard()
+    if (name === 'accounts') loadAccounts().then(() => loadPortfolios())
+  }
+
+  // ── Positions Page ────────────────────────────────────────────────────────
+  function selectPosUser(user) {
+    _posUser = user
+    document.querySelectorAll('.pos-user-btn').forEach(b => b.classList.remove('active'))
+    const btn = document.getElementById('pos-btn-' + user)
+    if (btn) btn.classList.add('active')
+    loadPositionsData()
+  }
+
+  async function loadPositionsData() {
+    await Promise.all([loadPosAccountSummary(), loadOpenPositions(), loadClosedOrders()])
+  }
+
+  async function loadPosAccountSummary() {
+    const el = document.getElementById('pos-summary')
+    if (!el) return
+    const notConnected = `<div style="color:var(--muted);font-size:13px;grid-column:1/-1;padding:8px 0">Connect an account in the Accounts tab to view positions.</div>`
+    try {
+      const r = await fetch(`/api/accounts/${_posUser}/account-summary`, {headers: authHeaders()})
+      if (!r.ok) { el.innerHTML = notConnected; return }
+      const d = await r.json()
+      if (d.error) { el.innerHTML = notConnected; return }
+      const fmt = v => v != null ? '$' + Number(v).toLocaleString('en-US', {minimumFractionDigits:2, maximumFractionDigits:2}) : '—'
+      const fmtPnl = v => {
+        if (v == null) return {text:'—', color:'var(--muted2)'}
+        return {text:(v>=0?'+':'')+fmt(v), color:v>=0?'var(--green)':'var(--red)'}
+      }
+      const items = [
+        {label:'Equity',           text:fmt(d.equity),            color:'#00ff88'},
+        {label:'Buying Power',     text:fmt(d.buying_power),      color:'var(--text)'},
+        {label:'Cash',             text:fmt(d.cash),              color:'var(--text)'},
+        {label:'Unrealized P&L',   ...fmtPnl(d.unrealized_pl)},
+        {label:'Long Market Value',text:fmt(d.long_market_value), color:'var(--text)'},
+        {label:'P&L Today',        ...fmtPnl(d.pnl_today)},
+      ]
+      el.innerHTML = items.map(i => `
+        <div class="pos-summary-item">
+          <div class="pos-summary-label">${i.label}</div>
+          <div class="pos-summary-value" style="color:${i.color||'var(--text)'}">${i.text}</div>
+        </div>
+      `).join('')
+    } catch(e) { el.innerHTML = notConnected }
+  }
+
+  async function loadOpenPositions() {
+    const el = document.getElementById('pos-open-body')
+    if (!el) return
+    const notConnected = `<div class="pos-empty">Connect an account in the Accounts tab to view positions.</div>`
+    try {
+      const r = await fetch(`/api/accounts/${_posUser}/positions`, {headers: authHeaders()})
+      if (!r.ok) { el.innerHTML = notConnected; return }
+      const positions = await r.json()
+      if (positions.error || !positions.length) {
+        el.innerHTML = `<div class="pos-empty">No open positions.</div>`; return
+      }
+      const fmt = v => v != null ? '$' + Number(v).toLocaleString('en-US', {minimumFractionDigits:2, maximumFractionDigits:2}) : '—'
+      el.innerHTML = positions.map(p => {
+        const pnl = p.unrealized_pl != null ? Number(p.unrealized_pl) : null
+        const pct = p.unrealized_plpc != null ? Number(p.unrealized_plpc) * 100 : null
+        const pnlColor = pnl == null ? 'var(--muted2)' : pnl >= 0 ? 'var(--green)' : 'var(--red)'
+        const pctColor = pct == null ? 'var(--muted2)' : pct >= 0 ? 'var(--green)' : 'var(--red)'
+        return `<div class="pos-table-row pos-open-cols">
+          <span style="font-weight:700">${p.symbol}</span>
+          <span>${p.qty ?? '—'}</span>
+          <span>${fmt(p.avg_entry_price)}</span>
+          <span>${fmt(p.current_price)}</span>
+          <span>${fmt(p.market_value)}</span>
+          <span style="color:${pnlColor}">${pnl != null ? (pnl>=0?'+':'')+fmt(pnl) : '—'}</span>
+          <span style="color:${pctColor}">${pct != null ? (pct>=0?'+':'')+pct.toFixed(2)+'%' : '—'}</span>
+          <span style="color:var(--muted2);text-transform:uppercase;font-size:11px">${p.side ?? '—'}</span>
+        </div>`
+      }).join('')
+    } catch(e) { el.innerHTML = notConnected }
+  }
+
+  async function loadClosedOrders() {
+    const el = document.getElementById('pos-closed-body')
+    if (!el) return
+    const notConnected = `<div class="pos-empty">Connect an account in the Accounts tab to view positions.</div>`
+    try {
+      const r = await fetch(`/api/accounts/${_posUser}/closed-orders`, {headers: authHeaders()})
+      if (!r.ok) { el.innerHTML = notConnected; return }
+      const orders = await r.json()
+      if (orders.error || !orders.length) {
+        el.innerHTML = `<div class="pos-empty">No closed orders found.</div>`; return
+      }
+      const fmt = v => v != null ? '$' + Number(v).toFixed(2) : '—'
+      const fmtDate = ts => {
+        try { return new Date(ts).toLocaleString('en-US', {month:'numeric',day:'numeric',hour:'2-digit',minute:'2-digit',hour12:true,timeZone:'America/Chicago'}) }
+        catch { return ts || '—' }
+      }
+      el.innerHTML = orders.map(o => {
+        const sideColor = o.side === 'buy' ? 'var(--green)' : 'var(--red)'
+        return `<div class="pos-table-row pos-closed-cols">
+          <span style="font-weight:700">${o.symbol}</span>
+          <span style="color:${sideColor};text-transform:uppercase;font-size:11px">${o.side ?? '—'}</span>
+          <span>${o.filled_qty ?? o.qty ?? '—'}</span>
+          <span>${fmt(o.filled_avg_price)}</span>
+          <span style="color:var(--muted2);font-size:11px">${fmtDate(o.filled_at)}</span>
+          <span style="color:var(--muted2);font-size:11px;text-transform:capitalize">${o.status ?? '—'}</span>
+        </div>`
+      }).join('')
+    } catch(e) { el.innerHTML = notConnected }
+  }
 
   // ── Clock ─────────────────────────────────────────────────────────────────
   function updateClock() {
@@ -1161,7 +1409,7 @@
 
   // ── Refresh All ───────────────────────────────────────────────────────────
   async function refreshAll() {
-    await Promise.all([loadMacro(), loadWatchlist(), loadSignals()])
+    await Promise.all([loadMacro(), loadWatchlist(), loadSignals(), loadMacroPnl()])
     document.getElementById('footer-refresh').textContent =
       'Last refresh: ' + new Date().toLocaleTimeString('en-US',{hour:'2-digit',minute:'2-digit',second:'2-digit',hour12:true,timeZone:'America/Chicago'}) + ' CST'
   }
@@ -1392,6 +1640,24 @@
     } catch(e) { /* non-fatal */ }
   }
 
+  async function loadMacroPnl() {
+    const el = document.getElementById('macro-pnl')
+    if (!el) return
+    try {
+      const r = await fetch('/api/accounts/jerry/account-summary', {headers: authHeaders()})
+      if (!r.ok) { el.textContent = '—'; el.style.color = 'var(--muted2)'; return }
+      const d = await r.json()
+      if (d.error) { el.textContent = '—'; el.style.color = 'var(--muted2)'; return }
+      const pnl = d.pnl_today
+      if (pnl != null) {
+        el.textContent = (pnl >= 0 ? '+' : '') + '$' + Math.abs(pnl).toLocaleString('en-US', {minimumFractionDigits:2, maximumFractionDigits:2})
+        el.style.color = pnl >= 0 ? 'var(--green)' : 'var(--red)'
+      } else {
+        el.textContent = '—'; el.style.color = 'var(--muted2)'
+      }
+    } catch(e) { el.textContent = '—'; el.style.color = 'var(--muted2)' }
+  }
+
   async function loadPerformance() {
     try {
       const r = await fetch('/api/trades/performance', {headers: authHeaders()})
@@ -1399,14 +1665,15 @@
       const d = await r.json()
       if (d.error) return
 
-      const fmt = v => (v >= 0 ? '+' : '') + '$' + Math.abs(v).toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2})
-
-      // Update macro bar stats
       const wrEl = document.getElementById('macro-winrate')
-      if (wrEl) { wrEl.textContent = d.win_rate.toFixed(1) + '%'; wrEl.style.color = d.win_rate >= 50 ? 'var(--green)' : 'var(--red)' }
-
-      const mpEl = document.getElementById('macro-pnl')
-      if (mpEl) { mpEl.textContent = fmt(d.total_pnl); mpEl.style.color = d.total_pnl >= 0 ? 'var(--green)' : 'var(--red)' }
+      if (wrEl) {
+        if (!d.total_trades) {
+          wrEl.textContent = '—'; wrEl.style.color = 'var(--muted2)'
+        } else {
+          wrEl.textContent = d.win_rate.toFixed(1) + '%'
+          wrEl.style.color = d.win_rate >= 50 ? 'var(--green)' : 'var(--red)'
+        }
+      }
 
       const otEl = document.getElementById('macro-open-trades')
       if (otEl) otEl.textContent = (d.open_trades ?? 0)
@@ -1474,13 +1741,14 @@
   // ── Init & Timers ─────────────────────────────────────────────────────────
   refreshAll()
   loadVwap()
-  loadAccounts().then(() => loadPortfolios())
-  loadPerformanceDashboard()
+  loadMacroPnl()
+  loadPerformance()
+  loadRegime()
 
-  setInterval(refreshAll, 60000)       // quotes + macro + signals every 60s
-  setInterval(loadVwap, 300000)        // VWAP scan every 5min
-  setInterval(() => loadPortfolios(), 120000)  // portfolios every 2min
-  setInterval(loadPerformanceDashboard, 30000) // performance dashboard every 30s
+  setInterval(refreshAll, 60000)        // quotes + macro + signals every 60s
+  setInterval(loadVwap, 300000)         // VWAP scan every 5min
+  setInterval(loadMacroPnl, 120000)     // P&L Today every 2min
+  setInterval(loadPerformance, 60000)   // win rate every 60s
 </script>
 </body>
 </html>

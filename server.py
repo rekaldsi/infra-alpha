@@ -12,7 +12,7 @@ from datetime import datetime, timezone
 from zoneinfo import ZoneInfo
 
 from alpaca_crypto import encrypt, decrypt
-from alpaca_client import get_account
+from alpaca_client import get_account, get_positions, get_closed_orders
 from security import require_auth, rate_limit, validate_user
 
 import httpx
@@ -693,6 +693,105 @@ def get_portfolio(user_name):
             "portfolio_value": float(data.get("portfolio_value", 0)),
             "pnl_today":       float(data.get("equity", 0)) - float(data.get("last_equity", data.get("equity", 0))),
         })
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+
+@app.route("/api/accounts/<user_name>/account-summary", methods=["GET"])
+@require_auth
+def get_account_summary(user_name):
+    if not validate_user(user_name):
+        return jsonify({"error": "Invalid user"}), 404
+    accounts = _load_accounts()
+    if user_name not in accounts:
+        return jsonify({"error": "Account not found"}), 404
+    acct = accounts[user_name]
+    if not acct.get("connected") or not acct.get("alpaca_key_id") or not acct.get("alpaca_secret"):
+        return jsonify({"error": "Account not connected"}), 400
+    try:
+        key_id = decrypt(acct["alpaca_key_id"])
+        secret = decrypt(acct["alpaca_secret"])
+        mode   = acct.get("mode", "paper")
+        data   = get_account(key_id, secret, mode)
+        equity      = float(data.get("equity", 0))
+        last_equity = float(data.get("last_equity", equity))
+        return jsonify({
+            "equity":            equity,
+            "buying_power":      float(data.get("buying_power", 0)),
+            "cash":              float(data.get("cash", 0)),
+            "portfolio_value":   float(data.get("portfolio_value", 0)),
+            "unrealized_pl":     float(data.get("unrealized_pl", 0)),
+            "long_market_value": float(data.get("long_market_value", 0)),
+            "daytrade_count":    int(data.get("daytrade_count", 0)),
+            "last_equity":       last_equity,
+            "pnl_today":         round(equity - last_equity, 2),
+        })
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+
+@app.route("/api/accounts/<user_name>/positions", methods=["GET"])
+@require_auth
+def get_user_positions(user_name):
+    if not validate_user(user_name):
+        return jsonify({"error": "Invalid user"}), 404
+    accounts = _load_accounts()
+    if user_name not in accounts:
+        return jsonify({"error": "Account not found"}), 404
+    acct = accounts[user_name]
+    if not acct.get("connected") or not acct.get("alpaca_key_id") or not acct.get("alpaca_secret"):
+        return jsonify({"error": "Account not connected"}), 400
+    try:
+        key_id = decrypt(acct["alpaca_key_id"])
+        secret = decrypt(acct["alpaca_secret"])
+        mode   = acct.get("mode", "paper")
+        positions = get_positions(key_id, secret, mode)
+        result = []
+        for p in positions:
+            result.append({
+                "symbol":          p.get("symbol"),
+                "qty":             p.get("qty"),
+                "avg_entry_price": p.get("avg_entry_price"),
+                "current_price":   p.get("current_price"),
+                "market_value":    p.get("market_value"),
+                "unrealized_pl":   p.get("unrealized_pl"),
+                "unrealized_plpc": p.get("unrealized_plpc"),
+                "side":            p.get("side"),
+                "asset_class":     p.get("asset_class"),
+            })
+        return jsonify(result)
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+
+@app.route("/api/accounts/<user_name>/closed-orders", methods=["GET"])
+@require_auth
+def get_user_closed_orders(user_name):
+    if not validate_user(user_name):
+        return jsonify({"error": "Invalid user"}), 404
+    accounts = _load_accounts()
+    if user_name not in accounts:
+        return jsonify({"error": "Account not found"}), 404
+    acct = accounts[user_name]
+    if not acct.get("connected") or not acct.get("alpaca_key_id") or not acct.get("alpaca_secret"):
+        return jsonify({"error": "Account not connected"}), 400
+    try:
+        key_id = decrypt(acct["alpaca_key_id"])
+        secret = decrypt(acct["alpaca_secret"])
+        mode   = acct.get("mode", "paper")
+        orders = get_closed_orders(key_id, secret, mode)
+        result = []
+        for o in orders:
+            result.append({
+                "symbol":           o.get("symbol"),
+                "side":             o.get("side"),
+                "qty":              o.get("qty"),
+                "filled_qty":       o.get("filled_qty"),
+                "filled_avg_price": o.get("filled_avg_price"),
+                "filled_at":        o.get("filled_at"),
+                "status":           o.get("status"),
+            })
+        return jsonify(result)
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 

@@ -39,3 +39,23 @@ def get_positions(key_id: str, secret: str, mode: str) -> list:
     r = session.get(f"{session.base_url}/v2/positions", timeout=10)
     r.raise_for_status()
     return r.json()
+
+
+def get_activities(key_id: str, secret: str, mode: str, activity_type: str = "FILL", limit: int = 100) -> list:
+    """Call GET /v2/account/activities and return activity list. Raises on HTTP error."""
+    session = get_alpaca_client(key_id, secret, mode)
+    r = session.get(f"{session.base_url}/v2/account/activities",
+                    params={"activity_type": activity_type, "page_size": limit},
+                    timeout=10)
+    r.raise_for_status()
+    return r.json()
+
+
+def get_closed_orders(key_id: str, secret: str, mode: str, limit: int = 50) -> list:
+    """Call GET /v2/orders with status=closed and return the list. Raises on HTTP error."""
+    session = get_alpaca_client(key_id, secret, mode)
+    r = session.get(f"{session.base_url}/v2/orders",
+                    params={"status": "closed", "limit": limit, "direction": "desc"},
+                    timeout=10)
+    r.raise_for_status()
+    return r.json()
