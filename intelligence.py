@@ -73,29 +73,29 @@ def detect_candlestick(bars: list) -> dict:
 
     # Hammer: small body, long lower wick (>2x body), bullish
     if cur_lower >= 2 * cur_body and cur_upper <= 0.3 * cur_body:
-        strength = min(1.0, cur_lower / max(cur_body, 0.01) / 4)
+        strength = min(0.8, cur_lower / max(cur_body, 0.01) / 4)  # CAP at 0.8 (OPTIMIZED 2026-04-19)
         return {"pattern": "hammer", "direction": "bullish", "strength": round(strength, 2)}
 
     # Inverted hammer: small body, long upper wick (>2x body), potential bullish reversal
     if cur_upper >= 2 * cur_body and cur_lower <= 0.3 * cur_body and cur["close"] > cur["open"]:
-        strength = min(1.0, cur_upper / max(cur_body, 0.01) / 4)
+        strength = min(0.8, cur_upper / max(cur_body, 0.01) / 4)  # CAP at 0.8 (OPTIMIZED 2026-04-19)
         return {"pattern": "inverted_hammer", "direction": "bullish", "strength": round(strength, 2)}
 
     # Shooting star: small body at top, long upper wick, bearish
     if cur_upper >= 2 * cur_body and cur_lower <= 0.3 * cur_body and cur["close"] < cur["open"]:
-        strength = min(1.0, cur_upper / max(cur_body, 0.01) / 4)
+        strength = min(0.8, cur_upper / max(cur_body, 0.01) / 4)  # CAP at 0.8 (OPTIMIZED 2026-04-19)
         return {"pattern": "shooting_star", "direction": "bearish", "strength": round(strength, 2)}
 
     # Bullish engulfing: current body fully covers prior body, direction reversal
     if (cur["close"] > cur["open"] and prev["close"] < prev["open"]
             and cur["open"] <= prev["close"] and cur["close"] >= prev["open"]):
-        strength = min(1.0, cur_body / max(prev_body, 0.01) / 2)
+        strength = min(0.8, cur_body / max(prev_body, 0.01) / 2)  # CAP at 0.8 (OPTIMIZED 2026-04-19)
         return {"pattern": "bullish_engulfing", "direction": "bullish", "strength": round(strength, 2)}
 
     # Bearish engulfing
     if (cur["close"] < cur["open"] and prev["close"] > prev["open"]
             and cur["open"] >= prev["close"] and cur["close"] <= prev["open"]):
-        strength = min(1.0, cur_body / max(prev_body, 0.01) / 2)
+        strength = min(0.8, cur_body / max(prev_body, 0.01) / 2)  # CAP at 0.8 (OPTIMIZED 2026-04-19)
         return {"pattern": "bearish_engulfing", "direction": "bearish", "strength": round(strength, 2)}
 
     # Morning star: 3-bar pattern
@@ -148,6 +148,12 @@ def get_news_sentiment(symbol: str) -> dict:
                 headlines.append(title)
 
         avg_score = sum(scores) / len(scores) if scores else 0.0
+        
+        # OPTIMIZED 2026-04-19: Ignore single-headline noise
+        # Real news requires ≥2 aligned headlines; one keyword match is not signal-worthy
+        if len(headlines) < 2:
+            avg_score = 0.0
+        
         result = {
             "symbol": symbol,
             "score": round(avg_score, 2),
@@ -242,14 +248,17 @@ def score_signal(symbol: str, vwap_setup: dict, candle: dict,
         vol_pts = 0
     components["volume"] = vol_pts
 
-    # Candlestick confirmation
+    # Candlestick confirmation (OPTIMIZED 2026-04-19)
+    # Candlesticks are confirmations, not primary signals.
+    # Apply strength multiplier so weak patterns don't over-contribute.
     candle_dir = candle.get("direction", "neutral")
+    candle_strength = candle.get("strength", 0.0)
     candle_pts = 0
     if candle_dir == "bullish":
-        candle_pts = 2
+        candle_pts = 2 * candle_strength  # Max +1.6 instead of +2
     elif candle_dir == "bearish":
-        candle_pts = -1
-    components["candlestick"] = candle_pts
+        candle_pts = -1 * candle_strength  # Max -0.8 instead of -1
+    components["candlestick"] = round(candle_pts, 2)
 
     # News score (-2..+2)
     news_score = news.get("score", 0.0)
@@ -310,12 +319,14 @@ def _get_vwap_setup_for_symbol(symbol: str) -> dict:
         last_vol = float(hist["Volume"].iloc[-1])
         vol_mult = last_vol / avg_vol if avg_vol > 0 else 1.0
 
-        # Price within 0.5% of VWAP
+        # Price within tight band of VWAP (OPTIMIZED 2026-04-19)
+        # Tighter thresholds: 0.2% → 0.15% for HIGH, 0.5% → 0.35% for MEDIUM
+        # Real VWAP bounces happen in 0.1-0.15% bands; wider window = drift, not bounce
         pct_from_vwap = abs(price - vwap) / vwap * 100 if vwap > 0 else 999
 
-        if pct_from_vwap < 0.2 and vol_mult >= 5:
+        if pct_from_vwap < 0.15 and vol_mult >= 5:
             signal = "HIGH"
-        elif pct_from_vwap < 0.5 and vol_mult >= 2:
+        elif pct_from_vwap < 0.35 and vol_mult >= 2:
             signal = "MEDIUM"
         else:
             signal = "LOW"
